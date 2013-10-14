@@ -51,6 +51,9 @@
 
 		<div data-role="content">
 			<ul data-role="listview" data-inset="true">
+				<li id="btConnectionStatus"> No connected Device ! </li>
+			
+			
 				<li><input id="setBluetooth" type="button"
 					value="Enable / Disable Bluetooth"
 					onclick="checkIfBluetoothIsEnabled()" /></li>
@@ -60,7 +63,7 @@
 
 			<div data-role="popup" id="devicesPopup" data-theme="a" class="ui-corner-all">
 				<div style="padding: 10px 20px;">
-					<h3>Please select a device to connect to.</h3>
+					<h3 id="titleDevicesPopup"></h3>
 					<ul data-role="listview" id="devices" data-theme="a"></ul>
 					<input type="button" value="Cancel"
 					onclick="$('#devicesPopup').popup('close')" data-theme="b"/>

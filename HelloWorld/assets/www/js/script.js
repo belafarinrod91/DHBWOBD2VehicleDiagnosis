@@ -53,24 +53,50 @@ function checkIfBluetoothIsEnabled(){
 }
 
 function discoverBTDevices(){
+	
+	//TODO : If Bluetooth is deactivated, device should not search !
+	var booleanIsEnabled;
+	bluetoothSerial.isEnabled(
+		    function() { 
+		        booleanIsEnabled = true;
+		    },
+		    function() { 
+		        booleanIsEnabled = false;
+		    }
+		);
+	
+	if(booleanIsEnabled == true){
+	
 	console.log("DISCOVERING STARTED");
-	// give UI-HINT while device is searching for devices !
+
 	bluetoothSerial.discoverDevices(
-	   function() { 
-	        alert("Bluetooth is enabled");
-	    },
-	    function() { 
-	        alert("Bluetooth is *not* enabled");
-	    }
-	); 
+	   function() {},
+	    function() {}
+	); }
+	else {
+		alert("Bluetooth is not enabled.");
+		return;
+	}
 }
 
 function stopDiscoverBTDevices(){
+	var devices = "";
 	console.log("DISCOVERING ENDED");
 	bluetoothSerial.stopDiscovering(
 	   function(r) { 
 		   console.log(JSON.stringify(r));
 		   var devices = r;
+		   
+		   
+		   var listIsEmpty = jQuery.isEmptyObject(devices); 
+		   if(listIsEmpty == false){
+			   $("#titleDevicesPopup").text("Please select a device to connect to.");
+		   }
+		   else {
+			   $("#titleDevicesPopup").text("No Device was found !");
+		   }
+		   
+		   
 		   for(d in devices) {
 			   $("#devices").append("<li><a onclick=\"pair('"+devices[d].name+"', '"+devices[d].adress+"')\">"+devices[d].name+"</a></li>");
 		   }
@@ -80,13 +106,57 @@ function stopDiscoverBTDevices(){
 	    }
 	);
 	$("#devices").listview("refresh");
-	console.log("was called");
-
 }
 
 function pair(name, adress){
-	alert(name);
+	$('#devicesPopup').popup('close');
+	$("#btConnectionStatus").text("connecting to : "+name+" ...");
+	
+	var isConnected;
+	var upComErr;
+	bluetoothSerial.isConnected(
+		    function() { 
+		    	isConnected = true;
+		    },
+		    function() { 
+		        isConnected = false;
+		    }
+		); 
+	
+	if(!isConnected){
+		bluetoothSerial.connect(
+                adress, 
+                function(success) { 
+                	console.log("connected !");
+                	}, 
+                function (error) { 
+                	alert(error);	
+                	upComErr = true;
+                	$("#btConnectionStatus").text("Connection Error.");
+                }
+            );        
+		
+	}
+	
+	if(!upComErr){
+		$("#btConnectionStatus").text("Is connected to : "+name+" !");
+	}
+
+	var i = 100;
+	while(i> 0){
+	bluetoothSerial.read(function (data) {
+	    console.log(data);
+	}, 
+	function(error){
+		console.log(error);
+	});
+	i = i-1;
+	}
+	
 }
 
 
+function disconnectDevice(){
+	alert("Disconnecting");
+}
 

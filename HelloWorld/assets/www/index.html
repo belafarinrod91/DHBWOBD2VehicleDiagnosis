@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>My Page</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script type="text/javascript" src="js/jqm/demos/js/jquery.js"></script>
+<link rel="stylesheet" href="js/jqm/jquery.mobile-1.3.2.css" />
+<script type="text/javascript" src="js/jqm/jquery.mobile-1.3.2.js"></script>
+
+
+<script type="text/javascript" src="phonegap.js"></script>
+<script type="text/javascript" src="js/bluetoothSerial.js"></script>
+<script type="text/javascript" src="js/script.js"></script>
+<script>
+	$(document).on('pageinit', function() {
+		$("#OnOffBluetooth").on("slidestop", function(event, ui) {
+			console.log("initmoin");
+		});
+	});
+</script>
+
+</head>
+<body onload="init();">
+
+	<div data-role="page" id="index">
+
+		<div data-role="header">
+			<h1>Home</h1>
+		</div>
+		<!-- /header -->
+
+		<div data-role="content">
+			<ul>
+				<li><a href="#setup" data-role="button">Settings</a></li>
+			</ul>
+		</div>
+		<!-- /content -->
+	</div>
+	<!-- /page -->
+
+
+	<div data-role="page" id="setup">
+
+		<div data-role="header">
+			<h1>Setup</h1>
+		</div>
+		<!-- /header -->
+
+		<div data-role="content">
+			<ul data-role="listview" data-inset="true">
+				<li><a href="#index" data-role="button">Index</a></li>
+				<li><input type="button" value="Enable / Disable Bluetooth"
+					onclick="checkIfBluetoothIsEnabled()" /></li>
+				<li><input type="button" value="Discover BT-Devices"
+					onclick="discoverBTDevices()" /></li>
+				<li><input type="button" value="Stop Discovering"
+					onclick="stopDiscoverBTDevices()" /></li>
+
+				<li></li>
+
+			</ul>
+			<div class="devices">
+				---
+			</div>
+		</div>
+		<!-- /content -->
+	</div>
+	<!-- /page -->
+
+
+
+
+
+
+
+</body>
+</html>

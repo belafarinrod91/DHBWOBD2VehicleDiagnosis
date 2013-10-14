@@ -3,7 +3,6 @@ var bluetoothSerial = cordova.require('bluetoothSerial');
 
 function init() {
 	document.addEventListener("deviceready", function() {
-	    alert('You are the winner!')
 	}, false)
 }
 
@@ -51,23 +50,25 @@ function discoverBTDevices(){
 }
 
 function stopDiscoverBTDevices(){
-	alert("called");
 	bluetoothSerial.stopDiscovering(
 	   function(r) { 
 		   console.log(JSON.stringify(r));
 		   var devices = r;
 		   for(d in devices) {
-			   $(".devices").append("<b>Appended text</b></br>");
+			   $("#devices").append("<li><a onclick=\"pair('"+devices[d].name+"', '"+devices[d].adress+"')\">"+devices[d].name+"-"+devices[d].adress+"</a></li>");
 		   }
-		   
 		},
 	    function(e) { 
 	        console.log("failure");
 	    }
-	);  
-	location.reload();
+	);
+	$("#devices").listview("refresh");
 	console.log("was called");
 
+}
+
+function pair(name, adress){
+	alert(name);
 }
 
 

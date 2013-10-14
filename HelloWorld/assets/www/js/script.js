@@ -7,7 +7,22 @@ function init() {
 }
 
 
-
+function findBTDevices(){
+	$.mobile.loading( 'show', {
+		text: 'Discovering Devices...',
+		textVisible: true,
+		theme: 'a',
+		html: ""
+	});
+	
+	discoverBTDevices();
+	
+	setTimeout(function() {
+		stopDiscoverBTDevices();
+		$( "#devicesPopup" ).popup("open");
+		$.mobile.loading('hide');
+	}, 5000); 
+}
 
 function checkIfBluetoothIsEnabled(){
 	var booleanIsEnabled;
@@ -38,6 +53,7 @@ function checkIfBluetoothIsEnabled(){
 }
 
 function discoverBTDevices(){
+	console.log("DISCOVERING STARTED");
 	// give UI-HINT while device is searching for devices !
 	bluetoothSerial.discoverDevices(
 	   function() { 
@@ -50,12 +66,13 @@ function discoverBTDevices(){
 }
 
 function stopDiscoverBTDevices(){
+	console.log("DISCOVERING ENDED");
 	bluetoothSerial.stopDiscovering(
 	   function(r) { 
 		   console.log(JSON.stringify(r));
 		   var devices = r;
 		   for(d in devices) {
-			   $("#devices").append("<li><a onclick=\"pair('"+devices[d].name+"', '"+devices[d].adress+"')\">"+devices[d].name+"-"+devices[d].adress+"</a></li>");
+			   $("#devices").append("<li><a onclick=\"pair('"+devices[d].name+"', '"+devices[d].adress+"')\">"+devices[d].name+"</a></li>");
 		   }
 		},
 	    function(e) { 

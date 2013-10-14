@@ -32,9 +32,9 @@
 		<!-- /header -->
 
 		<div data-role="content">
-			<ul>
-				<li><a href="#setup" data-role="button">Settings</a></li>
-			</ul>
+			<a href="#setup" data-role="button" data-icon="gear" data-theme="b">Setup</a>
+			<a href="#display" data-role="button" data-icon="star" data-theme="b"
+				id="display">Display</a>
 		</div>
 		<!-- /content -->
 	</div>
@@ -44,30 +44,29 @@
 	<div data-role="page" id="setup">
 
 		<div data-role="header">
+			<a href="#index" data-role="button" data-icon="home">Home</a>
 			<h1>Setup</h1>
 		</div>
 		<!-- /header -->
 
 		<div data-role="content">
 			<ul data-role="listview" data-inset="true">
-				<li><a href="#index" data-role="button">Index</a></li>
-				<li><input type="button" value="Enable / Disable Bluetooth"
+				<li><input id="setBluetooth" type="button"
+					value="Enable / Disable Bluetooth"
 					onclick="checkIfBluetoothIsEnabled()" /></li>
-				<li><input type="button" value="Discover BT-Devices"
-					onclick="discoverBTDevices()" /></li>
-				<li><input type="button" value="Stop Discovering"
-					onclick="stopDiscoverBTDevices()" /></li>
-
-				<li></li>
-
-
-				<div>
-					<ul data-role="listview" id="devices">
-					</ul>
-				</div>
+				<li><input type="button" value="Find BT-Devices"
+					onclick="findBTDevices()" /></li>
 			</ul>
-		</div>
 
+			<div data-role="popup" id="devicesPopup" data-theme="a" class="ui-corner-all">
+				<div style="padding: 10px 20px;">
+					<h3>Please select a device to connect to.</h3>
+					<ul data-role="listview" id="devices" data-theme="a"></ul>
+					<input type="button" value="Cancel"
+					onclick="$('#devicesPopup').popup('close')" data-theme="b"/>
+				</div>
+			</div>
+		</div>
 		<!-- /content -->
 	</div>
 	<!-- /page -->

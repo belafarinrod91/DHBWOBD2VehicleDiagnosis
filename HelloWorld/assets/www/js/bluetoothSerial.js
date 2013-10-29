@@ -78,4 +78,5 @@ module.exports = {
         cordova.exec(success, failure, "BluetoothSerial", "clear", []);
     }
 
-};
+}
+});

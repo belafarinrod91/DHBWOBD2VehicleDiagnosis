@@ -160,3 +160,71 @@ function disconnectDevice(){
 	alert("Disconnecting");
 }
 
+function moin() {
+	if($(".draggable").draggable("option","disabled") != false){
+		$("#displayConf").html($("#displayConf").html().replace("Configure", "Done"));
+		$(".draggable").draggable();
+		$(".draggable").resizable({
+		    stop: function(event, ui) {
+		    	
+		    	var canvasNode = this.getElementsByTagName("canvas").item(0);
+			    canvasNode.width = $(this).width();
+			    canvasNode.height = $(this).height();
+		        canvasNode.__object__.Draw();
+		        
+		    }, aspectRatio: 1 / 1
+		});
+	}else{
+		$("#displayConf").html($("#displayConf").html().replace("Done", "Configure"));
+		$(".draggable").draggable("destroy");
+		$(".draggable").resizable("destroy");
+	    localStorage.setItem("display", $("#display").html());
+	}
+}
+
+function drawGauge(canvasID){
+	var canvasNode = document.getElementById(canvasID);
+    canvasNode.width = $("#"+canvasNode.parentNode.id).width();
+    canvasNode.height = $("#"+canvasNode.parentNode.id).width();
+	
+    switch(canvasID){
+    case "speedCanvas":
+		new RGraph.Gauge(canvasID, 0, 300, 120)
+		.Set('title', 'Speed')
+	    .Set('title.bottom', 'km/h')
+	    .Set('title.bottom.color', '#aaa')
+	    .Draw();
+		break;
+    case "RPMCanvas":
+    	new RGraph.Gauge(canvasID, 0, 7, 0.8)
+		.Set('title', 'RPM')
+	    .Set('title.bottom', '*1000/s')
+	    .Set('title.bottom.color', '#aaa')
+	    .Draw();
+      	break;
+    default:
+    	console.log("No gauge defined for "+canvasID+".")
+    }
+}
+
+function updateGauges(){
+	var gauges=document.getElementById("displayContent").getElementsByTagName("canvas");
+	for (var i = 0; i < gauges.length; i++) {
+		
+		switch(gauges.item(i).id){
+	    case "speedCanvas":
+	    	gauges.item(i).__object__.value = Math.floor(Math.random()*300);
+	    	RGraph.Effects.Gauge.Grow(gauges.item(i).__object__);
+			break;
+	    case "RPMCanvas":
+	    	gauges.item(i).__object__.value = Math.floor(Math.random()*7);
+	    	RGraph.Effects.Gauge.Grow(gauges.item(i).__object__);
+	      	break;
+	    default:
+	    	console.log("No data defined for "+canvasID+".")
+	    
+		}
+		gauges.item(i).__object__.Draw();
+	}
+}
+

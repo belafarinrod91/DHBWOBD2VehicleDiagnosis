@@ -17,14 +17,14 @@
        under the License.
  */
 
-package com.phonegap.helloworld;
+package com.phonegap.main;
 
 import android.os.Bundle;
 import android.view.WindowManager;
 
 import org.apache.cordova.*;
 
-public class HelloWorld extends CordovaActivity 
+public class Main extends CordovaActivity 
 {
     @Override
     public void onCreate(Bundle savedInstanceState)

@@ -72,7 +72,8 @@ public class BluetoothSerial extends CordovaPlugin {
 
 	ArrayList<BluetoothDevice> arrayListBluetoothDevices = null;
 	ArrayAdapter<String> detectedAdapter;
-	JSONArray listOfDiscoveredDevices = new JSONArray();
+	
+	JSONArray listOfDiscoveredDevices;
 
 	@Override
 	public boolean execute(String action, CordovaArgs args,
@@ -97,6 +98,7 @@ public class BluetoothSerial extends CordovaPlugin {
 		}
 
 		else if (action.equals(DISCOVER_DEVICES)) {
+			listOfDiscoveredDevices = new JSONArray();
 			startDiscovering();
 		}
 

@@ -70,8 +70,7 @@ public class BluetoothSerial extends CordovaPlugin {
 	StringBuffer buffer = new StringBuffer();
 	private String delimiter;
 
-	ArrayList<BluetoothDevice> arrayListBluetoothDevices = null;
-	ArrayAdapter<String> detectedAdapter;
+
 	
 	JSONArray listOfDiscoveredDevices;
 

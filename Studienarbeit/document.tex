@@ -1,19 +1,158 @@
-%%This is a very basic article template.
-%%There is just one section and two subsections.
-\documentclass{article}
+\documentclass[4paper,10pt]{article} 
+\usepackage[a4paper,
+  left=2.6cm, right=2.6cm,
+  top=2.8cm, bottom=2.8cm]{geometry}
 
+\usepackage{selinput} 
+\SelectInputMappings{ 
+adieresis={ä}, 
+germandbls={ß}} 
+\usepackage[ngerman]{babel} 
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+
+
+%Kopf- und Fußzeile
+\pagestyle{fancy} 
+\fancyhf{} 
+
+\fancyhead[L]{\leftmark} %Kopfzeile links
+\fancyhead[C]{} %zentrierte Kopfzeile
+\fancyhead[R]{\includegraphics[width=0.1\textwidth]{./abbildungen/titelseite/dhbw_logo.png}}%Kopfzeile rechts
+\fancyfoot[R]{\thepage} %Seitennummer
+\fancyfoot[L]{} %Seitennummer
+\fancyfoot[C]{Jörg Woditschka | Jan Brodhaecker} %Seitennummer
+
+
+\newcommand{\superscript}[1]{\ensuremath{^{\textrm{#1}}}}
+\newcommand{\subscript}[1]{\ensuremath{_{\textrm{#1}}}}
+\newcommand{\hk}[1]{\grq}
+\renewcommand{\footrulewidth}{0.4pt} 
+
+
+%------------------------------------------------
+%Beginn des Dokumentes
+%------------------------------------------------
 \begin{document}
 
 
-\section{Title}
+\begin{titlepage}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./abbildungen/titelseite/dhbw_logo.png}\\[1cm]
+\textsc{\Large Studienarbeit}\\[0.5cm]
+\newcommand{\HRule}{\rule{\linewidth}{0.3mm}}
+\HRule \\[0.3cm]{ \huge \bfseries Entwicklung einer OBD2-Android Applikation}\\[0.3cm]
+\HRule \\[1.5cm]
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\center{
+Jörg Woditschka \\
+TINF11AI-BC \\
+\# 1234456 \\
+jwoditschka@gmail.com
+}
+\end{flushleft}
+\end{minipage}
+\hfill
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\center{
+Jan Brodhaecker \\
+TINF11AI-BC \\
+\# 3498577 \\
+jan.brodhaecker@gmx.net
+}
+\end{flushright}
+\end{minipage}
+\vfill
+{\large 30.Irgendwann.2014}
+\end{center}
+\end{titlepage}
 
-\subsection{Subtitle}
 
-Plain text.
+\renewcommand{\thesection}{\Roman{section}} 
+\section{Zusammenfassung}
+Irgendein Inhalt \ldots 
+\newpage
 
-\subsection{Another subtitle}
 
-More plain text.
+\section{Eidesstaatliche Erklärung}
+Irgendein Inhalt \ldots
+\newpage
+
+
+\tableofcontents
+\newpage
+
+\section{Abbildungsverzeichnis}
+\listoffigures
+\newpage
+
+\section{Tabellenverzeichnis}
+\listoftables
+\newpage
+
+\section{Abkürzungsverzeichnis}
+\newpage
+
+
+
+
+
+\setcounter{section}{0} 
+\renewcommand{\thesection}{\arabic{section}}
+
+
+\section{Introduction}
+\newpage
+
+\section{Abgrenzung des Projektes}
+\newpage
+
+\section{Grundlagen}
+\subsection{OBD2-Schnittstelle}
+\subsection{Android Enwicklungs Grundlagen}
+\subsection{Vergleich zu anderen Applikationen}
+\subsection{rechtliche Situation}
+\newpage
+
+
+\section{Projektergebnisse}
+\newpage
+
+\section{Fazit}
+\newpage
+
+
+
+
+
+\setcounter{section}{5} 
+\renewcommand{\thesection}{\Roman{section}}
+
+\section{\hspace{0.2cm}Literatur}
+\newpage
+
+\section{\hspace{0.1cm}Anhang}
+\newpage
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \end{document}

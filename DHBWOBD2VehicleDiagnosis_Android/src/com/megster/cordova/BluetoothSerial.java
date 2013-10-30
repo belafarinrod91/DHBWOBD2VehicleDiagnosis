@@ -26,372 +26,399 @@ import java.util.Set;
  */
 public class BluetoothSerial extends CordovaPlugin {
 
-    // actions
-    private static final String LIST = "list";
-    private static final String CONNECT = "connect";
-    private static final String CONNECT_INSECURE = "connectInsecure";
-    private static final String DISCONNECT = "disconnect";
-    private static final String WRITE = "write";
-    private static final String AVAILABLE  = "available";
-    private static final String READ  = "read";
-    private static final String READ_UNTIL  = "readUntil";
-    private static final String SUBSCRIBE = "subscribe";
-    private static final String UNSUBSCRIBE  = "unsubscribe";
-    private static final String IS_ENABLED = "isEnabled";
-    private static final String IS_CONNECTED  = "isConnected";
-    private static final String CLEAR  = "clear";
-    private static final String DISCOVER_DEVICES = "discoverDevices";
-    private static final String STOP_DISCOVER_DEVICES = "stopDiscoverDevices";
-    private static final String ACTIVATE_BLUETOOTH = "activateBluetooth";
-    private static final String DEACTIVATE_BLUETOOTH = "deactivateBluetooth";
+	// actions
+	private static final String LIST = "list";
+	private static final String CONNECT = "connect";
+	private static final String CONNECT_INSECURE = "connectInsecure";
+	private static final String DISCONNECT = "disconnect";
+	private static final String WRITE = "write";
+	private static final String AVAILABLE = "available";
+	private static final String READ = "read";
+	private static final String READ_UNTIL = "readUntil";
+	private static final String SUBSCRIBE = "subscribe";
+	private static final String UNSUBSCRIBE = "unsubscribe";
+	private static final String IS_ENABLED = "isEnabled";
+	private static final String IS_CONNECTED = "isConnected";
+	private static final String CLEAR = "clear";
+	private static final String DISCOVER_DEVICES = "discoverDevices";
+	private static final String STOP_DISCOVER_DEVICES = "stopDiscoverDevices";
+	private static final String ACTIVATE_BLUETOOTH = "activateBluetooth";
+	private static final String DEACTIVATE_BLUETOOTH = "deactivateBluetooth";
 
-    // callbacks
-    private CallbackContext connectCallback;
-    private CallbackContext dataAvailableCallback;
+	// callbacks
+	private CallbackContext connectCallback;
+	private CallbackContext dataAvailableCallback;
 
-    private BluetoothAdapter bluetoothAdapter;
-    private BluetoothSerialService bluetoothSerialService;
+	private BluetoothAdapter bluetoothAdapter;
+	private BluetoothSerialService bluetoothSerialService;
 
-    // Debugging
-    private static final String TAG = "BluetoothSerial";
-    private static final boolean D = true;
+	// Debugging
+	private static final String TAG = "BluetoothSerial";
+	private static final boolean D = true;
 
-    // Message types sent from the BluetoothSerialService Handler
-    public static final int MESSAGE_STATE_CHANGE = 1;
-    public static final int MESSAGE_READ = 2;
-    public static final int MESSAGE_WRITE = 3;
-    public static final int MESSAGE_DEVICE_NAME = 4;
-    public static final int MESSAGE_TOAST = 5;
+	// Message types sent from the BluetoothSerialService Handler
+	public static final int MESSAGE_STATE_CHANGE = 1;
+	public static final int MESSAGE_READ = 2;
+	public static final int MESSAGE_WRITE = 3;
+	public static final int MESSAGE_DEVICE_NAME = 4;
+	public static final int MESSAGE_TOAST = 5;
 
-    // Key names received from the BluetoothChatService Handler
-    public static final String DEVICE_NAME = "device_name";
-    public static final String TOAST = "toast";
+	// Key names received from the BluetoothChatService Handler
+	public static final String DEVICE_NAME = "device_name";
+	public static final String TOAST = "toast";
 
-    StringBuffer buffer = new StringBuffer();
-    private String delimiter;
-    
-    
-    
-    ArrayList<BluetoothDevice> arrayListBluetoothDevices = null;
-    ArrayAdapter<String> detectedAdapter;
-    JSONArray listOfDiscoveredDevices = new JSONArray();
-    
+	StringBuffer buffer = new StringBuffer();
+	private String delimiter;
 
-    @Override
-    public boolean execute(String action, CordovaArgs args, CallbackContext callbackContext) throws JSONException {
+	ArrayList<BluetoothDevice> arrayListBluetoothDevices = null;
+	ArrayAdapter<String> detectedAdapter;
+	JSONArray listOfDiscoveredDevices = new JSONArray();
 
-        LOG.d(TAG, "action = " + action);
+	@Override
+	public boolean execute(String action, CordovaArgs args,
+			CallbackContext callbackContext) throws JSONException {
 
-        if (bluetoothAdapter == null) {
-            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        }
+		LOG.d(TAG, "action = " + action);
 
-        if (bluetoothSerialService == null) {
-            bluetoothSerialService = new BluetoothSerialService(mHandler);
-        }
+		if (bluetoothAdapter == null) {
+			bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		}
 
-        boolean validAction = true;
-        
-        if (action.equals(LIST)) {
+		if (bluetoothSerialService == null) {
+			bluetoothSerialService = new BluetoothSerialService(mHandler);
+		}
 
-            listBondedDevices(callbackContext);
+		boolean validAction = true;
 
-        } 
-        
-        else if (action.equals(DISCOVER_DEVICES)) {
-        	startDiscovering();
-        }
-        
-        else if (action.equals(ACTIVATE_BLUETOOTH)) {
-        	cordova.getThreadPool().execute(new Runnable() {
-                public void run() {
-                   bluetoothAdapter.enable();
-                }
-            });
-        }
-        
-        else if (action.equals(DEACTIVATE_BLUETOOTH)) {
-        	cordova.getThreadPool().execute(new Runnable() {
-                public void run() {
-                   bluetoothAdapter.disable();
-                }
-            });
-        }
-        
-        else if (action.equals(STOP_DISCOVER_DEVICES)){
-        	stopDiscovering(callbackContext);
-        	
-        }
-        
-        
-        
-        else if (action.equals(CONNECT)) {
+		if (action.equals(LIST)) {
 
-            boolean secure = true;
-            connect(args, secure, callbackContext);
+			listBondedDevices(callbackContext);
 
-        } else if (action.equals(CONNECT_INSECURE)) {
+		}
 
-            // see Android docs about Insecure RFCOMM http://goo.gl/1mFjZY
-            boolean secure = false;
-            connect(args, false, callbackContext);
+		else if (action.equals(DISCOVER_DEVICES)) {
+			startDiscovering();
+		}
 
-        } else if (action.equals(DISCONNECT)) {
+		else if (action.equals(ACTIVATE_BLUETOOTH)) {
+			cordova.getThreadPool().execute(new Runnable() {
+				public void run() {
+					bluetoothAdapter.enable();
+				}
+			});
+		}
 
-            connectCallback = null;
-            bluetoothSerialService.stop();
-            callbackContext.success();
+		else if (action.equals(DEACTIVATE_BLUETOOTH)) {
+			cordova.getThreadPool().execute(new Runnable() {
+				public void run() {
+					bluetoothAdapter.disable();
+				}
+			});
+		}
 
-        } else if (action.equals(WRITE)) {
+		else if (action.equals(STOP_DISCOVER_DEVICES)) {
+			stopDiscovering(callbackContext);
 
-            String data = args.getString(0);
-            bluetoothSerialService.write(data.getBytes());
-            callbackContext.success();
+		}
 
-        } else if (action.equals(AVAILABLE)) {
+		else if (action.equals(CONNECT)) {
 
-            callbackContext.success(available());
+			boolean secure = true;
+			connect(args, secure, callbackContext);
 
-        } else if (action.equals(READ)) {
+		} else if (action.equals(CONNECT_INSECURE)) {
 
-            callbackContext.success(read());
+			// see Android docs about Insecure RFCOMM http://goo.gl/1mFjZY
+			boolean secure = false;
+			connect(args, false, callbackContext);
 
-        } else if (action.equals(READ_UNTIL)) {
+		} else if (action.equals(DISCONNECT)) {
 
-            String interesting = args.getString(0);
-            callbackContext.success(readUntil(interesting));
+			connectCallback = null;
+			bluetoothSerialService.stop();
+			callbackContext.success();
 
-        } else if (action.equals(SUBSCRIBE)) {
+		} else if (action.equals(WRITE)) {
 
-            delimiter = args.getString(0);
-            dataAvailableCallback = callbackContext;
+			String data = args.getString(0);
+			bluetoothSerialService.write(data.getBytes());
+			callbackContext.success();
 
-            PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
-            result.setKeepCallback(true);
-            callbackContext.sendPluginResult(result);
+		} else if (action.equals(AVAILABLE)) {
 
-        } else if (action.equals(UNSUBSCRIBE)) {
+			callbackContext.success(available());
 
-            delimiter = null;
-            dataAvailableCallback = null;
+		} else if (action.equals(READ)) {
 
-            callbackContext.success();
+			callbackContext.success(read());
 
-        } else if (action.equals(IS_ENABLED)) {
+		} else if (action.equals(READ_UNTIL)) {
 
-            if (bluetoothAdapter.isEnabled()) {
-                callbackContext.success();                
-            } else {
-                callbackContext.error("Bluetooth is disabled.");
-            }            
+			String interesting = args.getString(0);
+			callbackContext.success(readUntil(interesting));
 
-        } else if (action.equals(IS_CONNECTED)) {
-            
-            if (bluetoothSerialService.getState() == BluetoothSerialService.STATE_CONNECTED) {
-                callbackContext.success();                
-            } else {
-                callbackContext.error("Not connected.");
-            }
+		} else if (action.equals(SUBSCRIBE)) {
 
-        } else if (action.equals(CLEAR)) {
+			delimiter = args.getString(0);
+			dataAvailableCallback = callbackContext;
 
-            buffer.setLength(0);
-            callbackContext.success();
+			PluginResult result = new PluginResult(
+					PluginResult.Status.NO_RESULT);
+			result.setKeepCallback(true);
+			callbackContext.sendPluginResult(result);
 
-        } else {
+		} else if (action.equals(UNSUBSCRIBE)) {
 
-            validAction = false;
+			delimiter = null;
+			dataAvailableCallback = null;
 
-        }
+			callbackContext.success();
 
-        return validAction;
-    }
+		} else if (action.equals(IS_ENABLED)) {
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (bluetoothSerialService != null) {
-            bluetoothSerialService.stop();
-        }
-    }
+			if (bluetoothAdapter.isEnabled()) {
+				callbackContext.success();
+			} else {
+				callbackContext.error("Bluetooth is disabled.");
+			}
 
-    private void listBondedDevices(CallbackContext callbackContext) throws JSONException {
-        JSONArray deviceList = new JSONArray();
-        Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
+		} else if (action.equals(IS_CONNECTED)) {
 
-        for (BluetoothDevice device : bondedDevices) {
-            JSONObject json = new JSONObject();
-            json.put("name", device.getName());
-            json.put("address", device.getAddress());
-            if (device.getBluetoothClass() != null) {
-                json.put("class", device.getBluetoothClass().getDeviceClass());
-            }
-            deviceList.put(json);
-        }
-        callbackContext.success(deviceList);
-    }
+			if (bluetoothSerialService.getState() == BluetoothSerialService.STATE_CONNECTED) {
+				callbackContext.success();
+			} else {
+				callbackContext.error("Not connected.");
+			}
 
-    private void connect(CordovaArgs args, boolean secure, CallbackContext callbackContext) throws JSONException {
-        String macAddress = args.getString(0);
-        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(macAddress);
+		} else if (action.equals(CLEAR)) {
 
-        if (device != null) {
-            connectCallback = callbackContext;
-            bluetoothSerialService.connect(device, secure);
+			buffer.setLength(0);
+			callbackContext.success();
 
-            PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
-            result.setKeepCallback(true);
-            callbackContext.sendPluginResult(result);
+		} else {
 
-        } else {
-            callbackContext.error("Could not connect to " + macAddress);
-        }
-    }
+			validAction = false;
 
-    // The Handler that gets information back from the BluetoothSerialService
-    // Original code used handler for the because it was talking to the UI.
-    // Consider replacing with normal callbacks
-    private final Handler mHandler = new Handler() {
+		}
 
-         @Override
+		return validAction;
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if (bluetoothSerialService != null) {
+			bluetoothSerialService.stop();
+		}
+	}
+
+	private void listBondedDevices(CallbackContext callbackContext)
+			throws JSONException {
+		JSONArray deviceList = new JSONArray();
+		Set<BluetoothDevice> bondedDevices = bluetoothAdapter
+				.getBondedDevices();
+
+		for (BluetoothDevice device : bondedDevices) {
+			JSONObject json = new JSONObject();
+			json.put("name", device.getName());
+			json.put("address", device.getAddress());
+			if (device.getBluetoothClass() != null) {
+				json.put("class", device.getBluetoothClass().getDeviceClass());
+			}
+			deviceList.put(json);
+		}
+		callbackContext.success(deviceList);
+	}
+
+	private void connect(CordovaArgs args, boolean secure,
+			CallbackContext callbackContext) throws JSONException {
+		String macAddress = args.getString(0);
+		BluetoothDevice device = bluetoothAdapter.getRemoteDevice(macAddress);
+
+		if (device != null) {
+			connectCallback = callbackContext;
+			bluetoothSerialService.connect(device, secure);
+
+			PluginResult result = new PluginResult(
+					PluginResult.Status.NO_RESULT);
+			result.setKeepCallback(true);
+			callbackContext.sendPluginResult(result);
+
+		} else {
+			callbackContext.error("Could not connect to " + macAddress);
+		}
+	}
+
+	// The Handler that gets information back from the BluetoothSerialService
+	// Original code used handler for the because it was talking to the UI.
+	// Consider replacing with normal callbacks
+	private final Handler mHandler = new Handler() {
+
+		@Override
 		public void handleMessage(Message msg) {
-             switch (msg.what) {
-                 case MESSAGE_READ:
-                    buffer.append((String)msg.obj);
+			switch (msg.what) {
+			case MESSAGE_READ:
+				buffer.append((String) msg.obj);
 
-                    if (dataAvailableCallback != null) {
-                        sendDataToSubscriber();
-                    }
-                    break;
-                 case MESSAGE_STATE_CHANGE:
+				if (dataAvailableCallback != null) {
+					sendDataToSubscriber();
+				}
+				break;
+			case MESSAGE_STATE_CHANGE:
 
-                    if(D) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
-                    switch (msg.arg1) {
-                        case BluetoothSerialService.STATE_CONNECTED:
-                            Log.i(TAG, "BluetoothSerialService.STATE_CONNECTED");
-                            notifyConnectionSuccess();
-                            break;
-                        case BluetoothSerialService.STATE_CONNECTING:
-                            Log.i(TAG, "BluetoothSerialService.STATE_CONNECTING");
-                            break;
-                        case BluetoothSerialService.STATE_LISTEN:
-                            Log.i(TAG, "BluetoothSerialService.STATE_LISTEN");
-                            break;
-                        case BluetoothSerialService.STATE_NONE:
-                            Log.i(TAG, "BluetoothSerialService.STATE_NONE");
-                            break;
-                    }
-                    break;
-                case MESSAGE_WRITE:
-                    //  byte[] writeBuf = (byte[]) msg.obj;
-                    //  String writeMessage = new String(writeBuf);
-                    //  Log.i(TAG, "Wrote: " + writeMessage);
-                    break;
-                case MESSAGE_DEVICE_NAME:
-                    Log.i(TAG, msg.getData().getString(DEVICE_NAME));
-                    break;
-                case MESSAGE_TOAST:
-                    String message = msg.getData().getString(TOAST);
-                    notifyConnectionLost(message);
-                    break;
-             }
-         }
-    };
+				if (D)
+					Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
+				switch (msg.arg1) {
+				case BluetoothSerialService.STATE_CONNECTED:
+					Log.i(TAG, "BluetoothSerialService.STATE_CONNECTED");
+					notifyConnectionSuccess();
+					break;
+				case BluetoothSerialService.STATE_CONNECTING:
+					Log.i(TAG, "BluetoothSerialService.STATE_CONNECTING");
+					break;
+				case BluetoothSerialService.STATE_LISTEN:
+					Log.i(TAG, "BluetoothSerialService.STATE_LISTEN");
+					break;
+				case BluetoothSerialService.STATE_NONE:
+					Log.i(TAG, "BluetoothSerialService.STATE_NONE");
+					break;
+				}
+				break;
+			case MESSAGE_WRITE:
+				// byte[] writeBuf = (byte[]) msg.obj;
+				// String writeMessage = new String(writeBuf);
+				// Log.i(TAG, "Wrote: " + writeMessage);
+				break;
+			case MESSAGE_DEVICE_NAME:
+				Log.i(TAG, msg.getData().getString(DEVICE_NAME));
+				break;
+			case MESSAGE_TOAST:
+				String message = msg.getData().getString(TOAST);
+				notifyConnectionLost(message);
+				break;
+			}
+		}
+	};
 
-    private void notifyConnectionLost(String error) {
-        if (connectCallback != null) {
-            connectCallback.error(error);
-            connectCallback = null;
-        }
-    }
+	private void notifyConnectionLost(String error) {
+		if (connectCallback != null) {
+			connectCallback.error(error);
+			connectCallback = null;
+		}
+	}
 
-    private void notifyConnectionSuccess() {
-        if (connectCallback != null) {
-            PluginResult result = new PluginResult(PluginResult.Status.OK);
-            result.setKeepCallback(true);
-            connectCallback.sendPluginResult(result);
-        }
-    }
+	private void notifyConnectionSuccess() {
+		if (connectCallback != null) {
+			PluginResult result = new PluginResult(PluginResult.Status.OK);
+			result.setKeepCallback(true);
+			connectCallback.sendPluginResult(result);
+		}
+	}
 
-    private void sendDataToSubscriber() {
-        String data = readUntil(delimiter);
-        if (data != null && data.length() > 0) {
-            PluginResult result = new PluginResult(PluginResult.Status.OK, data);
-            result.setKeepCallback(true);
-            dataAvailableCallback.sendPluginResult(result);
-        }
-    }
+	private void sendDataToSubscriber() {
+		String data = readUntil(delimiter);
+		if (data != null && data.length() > 0) {
+			PluginResult result = new PluginResult(PluginResult.Status.OK, data);
+			result.setKeepCallback(true);
+			dataAvailableCallback.sendPluginResult(result);
+		}
+	}
 
-    private int available() {
-        return buffer.length();
-    }
+	private int available() {
+		return buffer.length();
+	}
 
-    private String read() {
-        int length = buffer.length();
-        String data = buffer.substring(0, length);
-        buffer.delete(0, length);
-        return data;
-    }
+	private String read() {
+		int length = buffer.length();
+		String data = buffer.substring(0, length);
+		buffer.delete(0, length);
+		return data;
+	}
 
-    private String readUntil(String c) {
-        String data = "";
-        int index = buffer.indexOf(c, 0);
-        if (index > -1) {
-            data = buffer.substring(0, index + c.length());
-            buffer.delete(0, index + c.length());
-        }
-        return data;
-    }
-    
-    private void startDiscovering(){
-        IntentFilter intentFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        cordova.getActivity().registerReceiver(mReceiver, intentFilter);
-        bluetoothAdapter.startDiscovery();
-    }
-    
-    
-    private void stopDiscovering(CallbackContext callbackContext){
-    	if(bluetoothAdapter.isDiscovering()){
-    		bluetoothAdapter.cancelDiscovery();
-    	}
-    	
-    	PluginResult res = new PluginResult(PluginResult.Status.OK, listOfDiscoveredDevices);
-    	res.setKeepCallback(true);
-        callbackContext.sendPluginResult(res);
-        
-        Log.i("Info","Stopped discovering Devices !");
-    	
-    }
-    
-    
-    
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
+	private String readUntil(String c) {
+		String data = "";
+		int index = buffer.indexOf(c, 0);
+		if (index > -1) {
+			data = buffer.substring(0, index + c.length());
+			buffer.delete(0, index + c.length());
+		}
+		return data;
+	}
+
+	private void startDiscovering() {
+		IntentFilter intentFilter = new IntentFilter(
+				BluetoothDevice.ACTION_FOUND);
+		cordova.getActivity().registerReceiver(mReceiver, intentFilter);
+		bluetoothAdapter.startDiscovery();
+	}
+
+	private void stopDiscovering(CallbackContext callbackContext) {
+		if (bluetoothAdapter.isDiscovering()) {
+			bluetoothAdapter.cancelDiscovery();
+		}
+
+		PluginResult res = new PluginResult(PluginResult.Status.OK,
+				listOfDiscoveredDevices);
+		res.setKeepCallback(true);
+		callbackContext.sendPluginResult(res);
+
+		Log.i("Info", "Stopped discovering Devices !");
+
+	}
+
+	private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+		@Override
 		public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            // When discovery finds a device
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                // Add the name and address to an array adapter to show in a ListView
-                Log.i("FOUND", "Name "+device.getName()+"-"+device.getAddress());
-               
-                
-                //TODO : Check if entry is already in list, no duplicates ! 
-                
-                JSONObject discoveredDevice = new JSONObject();
-                try {
+			String action = intent.getAction();
+			
+			if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+				BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+				Log.i("FOUND","Name " + device.getName() + "-" + device.getAddress());
+				JSONObject discoveredDevice = new JSONObject();
+				try {
 					discoveredDevice.put("name", device.getName());
 					discoveredDevice.put("adress", device.getAddress());
-					listOfDiscoveredDevices.put(discoveredDevice);
+					if(!isJSONInArray(discoveredDevice)){
+						listOfDiscoveredDevices.put(discoveredDevice);
+					}
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
-                
-            }
-            
-        }
-    };
-    
-    
+
+			}
+
+		}
+	};
+
+	/**
+	 * This function checks, whether a discovered Bluetooth-Device is already in the 
+	 * result-list. If a device is already in list, the function returns true, otherwise
+	 * false.
+	 * 
+	 * @param discoveredDevice - device which should be checked
+	 * @return
+	 */
+	public boolean isJSONInArray(JSONObject discoveredDevice) {
+		boolean result = false;
+
+		try {
+			for (int cnt = 0; cnt < listOfDiscoveredDevices.length(); cnt++) {
+				String listElement;
+
+				listElement = listOfDiscoveredDevices.get(cnt).toString();
+
+				String checkElement = discoveredDevice.toString();
+
+				if (listElement.equals(checkElement)) {
+					result = true;
+					System.out.println(listElement + "-" + checkElement);
+				}
+			}
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
 }

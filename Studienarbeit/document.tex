@@ -14,6 +14,7 @@ germandbls={ß}}
 \fancyhf{}
 
 
+
 %Kopf- und Fußzeile
 \pagestyle{fancy} 
 \fancyhf{} 
@@ -105,7 +106,7 @@ Irgendein Inhalt \ldots
 \renewcommand{\thesection}{\arabic{section}}
 
 
-\section{Introduction}
+\section{Einleitung}
 \newpage
 
 \section{Abgrenzung des Projektes}
@@ -113,8 +114,74 @@ Irgendein Inhalt \ldots
 
 \section{Grundlagen}
 \subsection{OBD2-Schnittstelle}
-\subsection{Android Enwicklungs Grundlagen}
+\subsection{Phonegap}
+Phonegap ist ein Framework der Firma Adobe, das zur Erstellung von
+multi-plattform Applikationen für mobile Endgeräte genutzt werden kann. Dabei
+wird im Grunde mit Hilfe von JavasScript, HTML und CSS eine Webapplikation
+definiert, die auf die verschiedensten Plattformen portiert werden kann. Dabei erstellt Phonegap
+allerdings keinen nativen Code für das jeweilige Gerät, sondern verknüft die
+geschriebene Webapplikation nur mit einer vordefinierten nativen Funktion, die
+die Webapplikation ledeglich startet. Zum heutigen Standpunkt\footnote{Phonegap
+3.10} unterstützt Phonegap die folgenden mobilen Betriebssysteme : 
+\begin{itemize}
+		\item iOS (Apple)
+		\item Android (Google)
+		\item webOS (HP)
+		\item Symbian OS (Nokia)
+		\item Blackberry (Blackberry)
+		\item Windows Phone (Microsoft).
+	\end{itemize}
+Da eine Phonegap-Applikation im Grunde nur mit Hilfe von JavaScript,
+Hyper-Transfer-Meta-Language (HTML) 5 und Cascading-Style-Sheet(CSS) 3
+entwickelt werden kann, fallen natürlich einige gerätespezifische Funktionen weg, so kann man beispielsweise mit JavaScript oder HTML5 nicht auf
+die Telefon-Funktion eines Smartphones zugreifen, oder auf den SMS-Speicher. Mit
+HTML5 kamen einige bahnbrechende Erneurungen, so kann mittlerweile per HTML auf
+die Kamera, auf den Kompass oder auf lokale Dateisystem eines Smartphones oder
+eines Tablets zugreifen. Wie bereits erwähnt werden auch mit HTML5 noch nicht
+alle Funktionen, die ein Smartphone oder ein Tablet bietet abgedeckt - Phonegap
+bietet dafür die Möglichkeit an, sogenannte Plugins zu verwenden oder gar zu
+selbst zu entwickeln. \\
+Bei einem Plugin kann man über speziell definierte Schnittstellen per JavaScript
+auf nativen Code zugreifen. Dafür muss ein Plugin speziell in der
+Phonegap-Applikation registriert werden. Der native Code muss dabei in einer
+speziellen Form vorliegen und gewisse Funktionsnamen bieten, die dann später per
+Javascript aufgerufen werden können. So kann man auch komplexe Applikationen mit
+Hilfe von Phonegap relativ schnell entwickeln, dabei muss natürlich der native
+Code für jede Plattform einzeln angepasst werden. Dagegen bleibt das
+Benutzer-Interface allerdings für alle Plattformen gleich. \\
+Zur Zeit gibt es auf dem Markt viele Frameworks, die die gleichen oder ähnlichen
+Funktionen wie Phonegap bieten. Beispielsweise SenchaTouch (Sencha), RhoMobile
+(Motorola) oder MoSync (MoSync). Da SenchaTouch mit kompletten Funktionsumfang
+nicht komplett kostenfrei, fiel dieses Framework ziemlich schnell aus der Wahl.
+Bei RhoMobile und MoSync führten die deutlich kleinere hilfegebende Community
+und die Instabilität zum Ausscheiden. Deshalb fiel die Wahl schlussendlich auf
+Phongeap. Phonegap unterliegt der Apache-Lizenz, was sie frei und veränderbar
+macht, solange der veränderte Quellcode ebenfalls der Apache-Lizenz unterliegt
+und für die Gesamtheit frei zugänglich bleibt.
+
+
+
 \subsection{Vergleich zu anderen Applikationen}
+Um bereits existierende Applikationen möglichst objektiv miteinander vergleichen
+zu können, wurde ein kleiner Fragenkatalog entwickelt, der schlussendlich auch
+zur Orientierung diente. Dabei wurden der Funktionsumfang, das
+Benutzer-Interface, der Preis und die Verfügbarkeit für die verschiedenen
+mobilen Betriebssysteme.
+\\ 
+
+
+\begin{tabular}{ l | l | p{5cm} | l | l}
+
+Name & Funktionsumfang & Benutzer-Interface & Preis & OS \\
+\hline
+\\
+Torque&  blablabla& blallb & 3,50€ & Android \\
+
+
+\end{tabular}
+
+
+
 \subsection{rechtliche Situation}
 \newpage
 

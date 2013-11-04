@@ -1,4 +1,4 @@
-package obd2bluetooth;
+package obd2.connection;
 
 import java.util.ArrayList;
 

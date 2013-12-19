@@ -22,13 +22,12 @@
         <meta charset="utf-8" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
         
         <!-- Dojo styles-->
 		<link rel="stylesheet" href="js/dojo-release-1.9.1/dijit/themes/claro/claro.css">
 		<link rel="stylesheet" href="js/dojo-release-1.9.1/dojox/layout/resources/ResizeHandle.css" />
-        
-        <title>Hello World</title>
+      
+        <title>CarComp</title>
         
         <script type="text/javascript" src="phonegap.js"></script>
         <script type="text/javascript" src="cordova.js"></script>
@@ -122,7 +121,12 @@
 		
 	</div>
        
-       
+	<!-- loading Overlay -->
+	<div id="loadingOverlay" style="top: 0; left: 0; position: absolute; height: 100%; width: 100%; z-index: 1001; display: block; background: #fff;">
+		<div style="position: absolute; width: 100px; height: 100px; top: 50%; left: 50%; margin-top: -50px; margin-left: -50px;">
+			<a>Loading...</a>
+		</div>
+	</div>
         
     <!-- configure and load dojo -->
 	<script type="text/javascript" src="js/dojo-release-1.9.1/dojox/mobile/deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SimpleDialog','TextBox','Button','Slider']"></script>
@@ -132,6 +136,7 @@
 		require([
 			"dojo/dnd/Moveable",
 			"dojo/dom",
+			"dojo/dom-style",
 			"dijit/registry",
 			"dojox/mobile/ProgressIndicator",
 			"dojox/mobile/parser",
@@ -145,7 +150,7 @@
 			"dojo/domReady!",
 			"dijit/form/Button",
 			"dojox/gauges/GlossyCircularGauge"
-		], function(Moveable, dom, registry, ProgressIndicator){
+		], function(Moveable, dom, domStyle, registry, ProgressIndicator){
 			show = function(dlg){
 				registry.byId(dlg).show();
 			}
@@ -241,6 +246,9 @@
 				registry.byId("display_fuelType").set("rightText", values[4]);
 				registry.byId("display_fuelRate").set("rightText", values[5]);
 			}
+			
+			//Hide loading overlay when dojo is fully initialized
+			domStyle.set(dom.byId("loadingOverlay"),'display','none');
 			
 		});
 	</script>

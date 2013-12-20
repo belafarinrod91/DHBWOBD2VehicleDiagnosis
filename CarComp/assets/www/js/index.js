@@ -63,20 +63,20 @@ var app = {
     		   console.log(JSON.stringify(r));
     		   var devices = r;
     		   
-    		   var listIsEmpty = true;
-    		   if(document.getElementById("devices").length>0){
-    			   listIsEmpty=false;
-    		   }
+    		   //clearing device list
+    		   document.getElementById("devices").innerHTML = '';
     		   
-    		   if(listIsEmpty == false){
-    			   document.getElementById("devices").innerHTML="Please select a device to connect to.";
-    		   }
-    		   else {
-    			   document.getElementById("devices").innerHTML="No Device was found !";
-    		   }
-    		   
+    		   //adding new elements to device list
     		   for(d in devices) {
     			   appendListElement(devices[d].name, devices[d].adress, "devices");
+    		   }
+    		   
+    		   //setting message displayed to the user
+    		   if(document.getElementById("devices").getElementsByTagName("li").length){
+    			   document.getElementById("titleDevicesPopup").innerHTML="Please select a device to connect to.";
+    		   }
+    		   else {
+    			   document.getElementById("titleDevicesPopup").innerHTML="No Device was found !";
     		   }
     		},
     	    function(e) { 

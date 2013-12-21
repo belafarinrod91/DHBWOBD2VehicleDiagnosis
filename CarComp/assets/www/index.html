@@ -37,6 +37,8 @@
         <link rel="stylesheet" href="css/index.css">
 		<link rel="stylesheet" href="js/dojo-release-1.9.1/dijit/themes/claro/claro.css">
 		<link rel="stylesheet" href="js/dojo-release-1.9.1/dojox/layout/resources/ResizeHandle.css" />
+		<link rel="stylesheet" href="js/dojo-release-1.9.1/dojox/mobile/themes/common/domButtons/DomButtonRedCircleMinus.css"/>
+		<link rel="stylesheet" href="js/dojo-release-1.9.1/dojox/mobile/themes/common/domButtons/DomButtonGrayKnob.css"/>
     </head>
     <body>
        	<div id="home" data-dojo-type="dojox.mobile.View" data-dojo-props="selected: true">
@@ -82,34 +84,31 @@
 	</div>
 	
 	<div id="display" data-dojo-type="dojox.mobile.View">
-		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props="back:'Home', moveTo:'home'">Display</h1>
+		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props="back:'Home', moveTo:'home'">
+			Display
+			<div id="custButtonDisplay" data-dojo-type="dojox.mobile.ToolBarButton" style="float:right;" onClick="makeMoveableDisplay()">
+				Customize
+			</div>
+		</h1>
 
-		<ul data-dojo-type="dojox.mobile.RoundRectList">
-			<li id="display_rpm" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0">
-				Engine RPM
-			</li>
-			<li id="display_speed" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0">
-				Vehicle Speed
-			</li>
-			<li id="display_runTime" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0">
-				Run time since engine start
-			</li>
-			<li id="display_oilTemp" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0">
-				Engine Oil Temperature
-			</li>
-			<li id="display_fuelType" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:'gasoline'">
-				Fuel Type
-			</li>
-			<li id="display_fuelRate" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0">
-				Engine Fuel Rate
-			</li>
+		<ul id="displayList" data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='editable:true'>
+			<li id="display_rpm" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0, label:'Engine RPM'" />
+			<li id="display_speed" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0, label:'Vehicle Speed'" />
+			<li id="display_runTime" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0, label:'Run time since engine start'" />
+			<li id="display_oilTemp" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0, label:'Engine Oil Temperature'" />
+			<li id="display_fuelType" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:'gasoline', label:'Fuel Type'" />
+			<li id="display_fuelRate" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="rightText:0, label:'Engine Fuel Rate'" />
 		</ul>
+		<button id="refrshButtonDisplay" data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" onclick="refreshValues()">Refresh Values</button>
+		<button id="propertieButtonDisplay" data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" onclick="show('displayPopup')" style="visibility:hidden">Add Properties</button>
 		
-		<ul data-dojo-type="dojox.mobile.RoundRectList">
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onclick="refreshValues()">
-				Refresh Values
-			</li>
-		</ul>
+		
+		<div id="displayPopup" data-dojo-type="dojox.mobile.SimpleDialog">
+			<div id="titleDisplayPopup" class="mblSimpleDialogText">Please select properties to display.</div>
+			<ul id="properties" data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props="select:'multiple'"></ul>
+			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide('displayPopup')">Back</button>
+			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" onclick="addProperties()">Add</button>
+		</div>
 		
 	</div>
 	<div id="displayGauges" data-dojo-type="dojox.mobile.View">

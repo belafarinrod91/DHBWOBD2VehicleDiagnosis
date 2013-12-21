@@ -1,20 +1,20 @@
 require([
-	"dojo/dnd/Moveable",
-	"dojo/dom",
-	"dojo/dom-style",
-	"dijit/registry",
-	"dojox/mobile/ProgressIndicator",
-	"dojox/mobile/parser",
-	"dojox/mobile",
-	"dojox/mobile/compat",
-	"dojox/mobile/SimpleDialog",
-	"dojox/mobile/TextBox",
-	"dojox/mobile/Button",
-	"dojox/mobile/Slider", 
-	"dojox/mobile/deviceTheme", 
-	"dojo/domReady!",
-	"dijit/form/Button",
-	"dojox/gauges/GlossyCircularGauge"
+		"dojo/dnd/Moveable",
+		"dojo/dom",
+		"dojo/dom-style",
+		"dijit/registry",
+		"dojox/mobile/ProgressIndicator",
+		"dojox/mobile/parser",
+		"dojox/mobile",
+		"dojox/mobile/compat",
+		"dojox/mobile/SimpleDialog",
+		"dojox/mobile/TextBox",
+		"dojox/mobile/Button",
+		"dojox/mobile/Slider", 
+		"dojox/mobile/deviceTheme", 
+		"dojo/domReady!",
+		"dijit/form/Button",
+		"dojox/gauges/GlossyCircularGauge"
 	], function(Moveable, dom, domStyle, registry, ProgressIndicator){
 		
 		//displaying a dialog
@@ -141,4 +141,97 @@ require([
 		
 		//Hides loading overlay when dojo is fully initialized
 		domStyle.set(dom.byId("loadingOverlay"),'display','none');
+});
+
+//customize functionality of "Display"
+require([
+	"dojo/_base/connect",
+	"dojo/dom-class",
+	"dojo/ready",
+	"dijit/registry",
+	"dojox/mobile/parser",
+	"dojox/mobile",
+	"dojox/mobile/compat"
+], function(connect, domClass, ready, registry){
+	var delItem, handler, btn1, list1;
+
+	function showDeleteButton(item){
+		hideDeleteButton();
+		delItem = item;
+		item.rightIconNode.style.display = "none";
+		if(!item.rightIcon2Node){
+			item.set("rightIcon2", "mblDomButtonMyRedButton_0");
+			item.rightIcon2Node.firstChild.innerHTML = "Delete";
+		}
+		item.rightIcon2Node.style.display = "";
+		handler = connect.connect(list1.domNode, "onclick", onClick);
+	}
+
+	function hideDeleteButton(){
+		if(delItem){
+			delItem.rightIconNode.style.display = "";
+			delItem.rightIcon2Node.style.display = "none";
+			delItem = null;
+		}
+		connect.disconnect(handler);
+	}
+
+	function onClick(e){
+		var item = registry.getEnclosingWidget(e.target);
+		if(domClass.contains(e.target, "mblDomButtonMyRedButton_0")){
+			oldId=item.id;
+			oldLabel=item.get("label");
+			oldRightText=item.get("rightText");
+			item.destroy();
+			list2.addChild(new dojox.mobile.ListItem({
+				 id:oldId,
+	        	 label:oldLabel,
+	        	 rightText:oldRightText
+	        }));
+		}
+		hideDeleteButton();
+	}
+
+	connect.subscribe("/dojox/mobile/deleteListItem", function(item){
+		showDeleteButton(item);
+	});
+
+	makeMoveableDisplay = function(){
+		var flag = btn1._flag = !btn1._flag; // true: editable
+		if(flag){
+			list1.startEdit();
+			btn1.set("label", "Done");
+			registry.byId("propertieButtonDisplay").set("style", "visibility:visible");
+		}else{
+			hideDeleteButton();
+			list1.endEdit();
+			btn1.set("label", "Customize");
+			registry.byId("propertieButtonDisplay").set("style", "visibility:hidden");
+		}
+	}
+
+	ready(function(){
+		btn1 = registry.byId("custButtonDisplay");
+		list1 = registry.byId("displayList");
+		list2 = registry.byId("properties");
+	});
+	
+	addProperties=function(){
+		selected=registry.byId("properties").getChildren();
+		for(var i=0; i<selected.length; i++){
+			item=selected[i];
+			if(selected[i].checked){
+				oldId=item.id;
+				oldLabel=item.get("label");
+				oldRightText=item.get("rightText");
+				item.destroy();
+				list1.addChild(new dojox.mobile.ListItem({
+					 id:oldId,
+		        	 label:oldLabel,
+		        	 rightText:oldRightText
+		        }));
+				list1.startEdit();
+			}
+		}
+	}
 });

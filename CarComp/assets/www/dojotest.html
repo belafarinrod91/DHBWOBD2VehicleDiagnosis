@@ -4,182 +4,138 @@
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
 	<meta name="apple-mobile-web-app-capable" content="yes"/>
-	<title>Simple Dialog Test</title>
+	<title>RoundRectList - editable</title>
 
-	<link href="../themes/common/domButtons.css" rel="stylesheet"/>
-	<script type="text/javascript" src="js/dojo-release-1.9.1/dojox/mobile/deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SimpleDialog','TextBox','Button','Slider']"></script>
-	<script type="text/javascript" src="js/dojo-release-1.9.1/dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+	<link href="js/dojo-release-1.9.1/dojox/mobile/themes/common/domButtons/DomButtonRedCircleMinus.css" rel="stylesheet"/>
+	<link href="js/dojo-release-1.9.1/dojox/mobile/themes/common/domButtons/DomButtonGrayKnob.css" rel="stylesheet"/>
+	<script type="text/javascript" src="js/dojo-release-1.9.1/dojox/mobile/deviceTheme.js" data-dojo-config="mblThemeFiles: ['base']"></script>
+	<script type="text/javascript" src="js/dojo-release-1.9.1//dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
 
 	<script type="text/javascript">
 		require([
-			"dojo/dom",
+			"dojo/_base/connect",
+			"dojo/dom-class",
+			"dojo/ready",
 			"dijit/registry",
-			"dojox/mobile/ProgressIndicator",
 			"dojox/mobile/parser",
 			"dojox/mobile",
-			"dojox/mobile/compat",
-			"dojox/mobile/SimpleDialog",
-			"dojox/mobile/TextBox",
-			"dojox/mobile/Button",
-			"dojox/mobile/Slider"
-		], function(dom, registry, ProgressIndicator){
-			show = function(dlg){
-				registry.byId(dlg).show();
-			}
-			hide = function(dlg){
-				registry.byId(dlg).hide();
-			}
-			var prog;
-			show_progress_indicator = function(dlg,cont){
-				show(dlg);
-				var container = dom.byId(cont);
-				prog = ProgressIndicator.getInstance();
-				container.appendChild(prog.domNode);
-				prog.start();
-				setTimeout(function(){
-					hide_progress_indicator(dlg);
-				}, 5000);
-			}
-			hide_progress_indicator = function(dlg){
-				prog.stop();
-				hide(dlg);
-			}
-		});
+			"dojox/mobile/compat"
+		], function(connect, domClass, ready, registry){
+			var delItem, handler, btn1, list1;
 
+			function showDeleteButton(item){
+				hideDeleteButton();
+				delItem = item;
+				item.rightIconNode.style.display = "none";
+				if(!item.rightIcon2Node){
+					item.set("rightIcon2", "mblDomButtonMyRedButton_0");
+					item.rightIcon2Node.firstChild.innerHTML = "Delete";
+				}
+				item.rightIcon2Node.style.display = "";
+				handler = connect.connect(list1.domNode, "onclick", onClick);
+			}
+
+			function hideDeleteButton(){
+				if(delItem){
+					delItem.rightIconNode.style.display = "";
+					delItem.rightIcon2Node.style.display = "none";
+					delItem = null;
+				}
+				connect.disconnect(handler);
+			}
+
+			function onClick(e){
+				var item = registry.getEnclosingWidget(e.target);
+				if(domClass.contains(e.target, "mblDomButtonMyRedButton_0")){
+					setTimeout(function(){
+						item.destroy();
+					}, 0);
+				}
+				hideDeleteButton();
+			}
+
+			connect.subscribe("/dojox/mobile/deleteListItem", function(item){
+				showDeleteButton(item);
+			});
+
+			edit = function(){
+				var flag = btn1._flag = !btn1._flag; // true: editable
+				if(flag){
+					list1.startEdit();
+					btn1.set("label", "Done");
+				}else{
+					hideDeleteButton();
+					list1.endEdit();
+					btn1.set("label", "Edit");
+				}
+			}
+
+			ready(function(){
+				btn1 = registry.byId("btn1");
+				list1 = registry.byId("list1");
+			});
+		});
 	</script>
 
 	<style>
-		.mblSimpleDialogInput {
-			margin: 7px 0 14px;
-			width: 260px;
-		}
-		.mblSimpleDialogButton {
-			margin: 7px 0 0;
-			width: 262px;
-			font-size: 17px;
-			font-weight: bold;
-			opacity: 0.95;
-		}
-		.mblSimpleDialogButton2l {
-			float: left;
-			width: 127px;
-			margin: 7px 0 0;
-			font-size: 17px;
-			font-weight: bold;
-			opacity: 0.95;
-		}
-		.mblSimpleDialogButton2r {
-			float: right;
-			width: 127px;
-			margin: 7px 0 0;
-			font-size: 17px;
-			font-weight: bold;
-			opacity: 0.95;
-		}
-		.mblSimpleDialog .mblProgressIndicator {
-			position: relative;
-			margin: 14px 0 7px;
-			top: 0;
-		}
-
-		.mblSimpleDialog .mblListItem {
-			text-align: left;
-		}
-
-		.windows_theme .mblDomButtonSilverCircleGrayButton > div,
-		.windows_theme .mblDomButtonSilverCircleGreenButton > div {
-			background-color: transparent !important;
-			background-image: none !important;
-			border: 2px solid white;
-			border-radius: 25px;
-		}
-		.windows_theme .mblDomButtonSilverCircleGrayButton > div > div {
-			background-color: transparent !important;
-			background-image: none !important;
-			border: none !important;
-		}
-		.windows_theme .mblDomButtonSilverCircleGreenButton > div > div {
-			background-color: white !important;
-		}
+	/* inline custom DOM Button */
+	.mblDomButtonMyRedButton_0 {
+		position: relative;
+		height: 29px;
+		line-height: 29px;
+		padding: 0px 8px;
+		color: white;
+		font-family: Helvetica;
+		font-size: 13px;
+		font-weight: bold;
+		border: 1px outset #9cacc0;
+		border-radius: 5px;
+		background: -webkit-gradient(linear, left top, left bottom, from(#d3656d), to(#bc1320), color-stop(0.5, #c9404b), color-stop(0.5, #bc1421));
+		background-color: #c9404b;
+		text-align: center;
+	}
 	</style>
 </head>
 <body style="visibility:hidden;">
-	<div id="dlg_message" data-dojo-type="dojox.mobile.SimpleDialog">
-		<div class="mblSimpleDialogTitle">Information</div>
-		<div class="mblSimpleDialogText">This is a sample dialog.</div>
-		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" style="width:100px;" onclick="hide('dlg_message')">OK</button>
-	</div>
-
-	<div id="dlg_confirm" data-dojo-type="dojox.mobile.SimpleDialog">
-		<div class="mblSimpleDialogTitle">Rain Alert</div>
-		<div class="mblSimpleDialogText">Do you have an umbrella?</div>
-		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" onclick="hide('dlg_confirm')">No</button>
-		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblBlueButton" onclick="hide('dlg_confirm')">Yes</button>
-	</div>
-	
-	<div id="dlg_login" data-dojo-type="dojox.mobile.SimpleDialog">
-		<div class="mblSimpleDialogTitle">Mobile Community</div>
-		<div class="mblSimpleDialogText">Enter your ID and Password</div>
-		<input data-dojo-type="dojox.mobile.TextBox" class="mblSimpleDialogInput" type="text" data-dojo-props='selectOnClick:true, placeHolder:"ID"' style="margin-bottom: 0;" required>
-		<input data-dojo-type="dojox.mobile.TextBox" class="mblSimpleDialogInput" type="password" data-dojo-props='selectOnClick:true, placeHolder:"Password"' style="margin-top: 0;" required>
-		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton2l" onclick="hide('dlg_login')">Cancel</button>
-		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton2r mblBlueButton" onclick="hide('dlg_login')">OK</button>
-	</div>
-
-	<div id="dlg_progress" data-dojo-type="dojox.mobile.SimpleDialog">
-		<div class="mblSimpleDialogText">Please wait for 5 seconds.</div>
-		<div class="mblSimpleDialogText" id="progress_indicator_container"></div>
-		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide_progress_indicator('dlg_progress')">Cancel</button>
-	</div>
-
-	<div id="dlg_volume" data-dojo-type="dojox.mobile.SimpleDialog">
-		<div class="mblSimpleDialogTitle">Volume</div>
-		<div class="mblSimpleDialogText">Ringtone</div>
-		<input data-dojo-type="dojox.mobile.Slider" value="0" min="0" max="20" step="0.1" type="range" style="width:90%;">
-		<div class="mblSimpleDialogText">Media</div>
-		<input data-dojo-type="dojox.mobile.Slider" value="0" min="0" max="20" step="0.1" type="range" style="width:90%;">
-		<div class="mblSimpleDialogText">Alarm</div>
-		<input data-dojo-type="dojox.mobile.Slider" value="0" min="0" max="20" step="0.1" type="range" style="width:90%;">
-		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton2l" onclick="hide('dlg_volume')">OK</button>
-		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton2r" onclick="hide('dlg_volume')">Cancel</button>
-	</div>
-
-	<div id="dlg_select" data-dojo-type="dojox.mobile.SimpleDialog">
-		<div class="mblSimpleDialogTitle">Animation</div>
-		<ul data-dojo-type="dojox.mobile.EdgeToEdgeList" data-dojo-props='select:"single"'>
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='checkClass:"mblDomButtonSilverCircleGreenButton", uncheckClass:"mblDomButtonSilverCircleGrayButton"'>
-				No animations
+	<div id="view1" data-dojo-type="dojox.mobile.View">
+		<div data-dojo-type="dojox.mobile.Heading" data-dojo-props='label:"Editable RoundRectList"'>
+			<span id="btn1" data-dojo-type="dojox.mobile.ToolBarButton" data-dojo-props='toggle:true' style="padding: 0px 14px;float:left" onclick="edit">Edit</span>
+		</div>
+		<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Transition Effects</h2>
+		<ul id="list1" data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='editable:true'>
+			<li id="item1" data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-1.png"'>
+				Slide
 			</li>
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='checkClass:"mblDomButtonSilverCircleGreenButton", uncheckClass:"mblDomButtonSilverCircleGrayButton"'>
-				Some animations
+			<li id="item2" data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-2.png"'>
+				Flip
 			</li>
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='checkClass:"mblDomButtonSilverCircleGreenButton", uncheckClass:"mblDomButtonSilverCircleGrayButton", checked:true'>
-				All animations
+			<li id="item3" data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png"'>
+				Fade
 			</li>
+
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item 1"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item 2"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item 3"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item 4"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item 5"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item 6"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item 7"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item 8"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item 9"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item a"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item b"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item c"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item d"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item e"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item f"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item g"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item h"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item i"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item j"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item k"'></li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props='icon:"images/i-icon-3.png", label:"Item l"'></li>
+
 		</ul>
-		<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" style="width:60%;" onclick="hide('dlg_select')">Cancel</button>
 	</div>
-
-	<div id="view" data-dojo-type="dojox.mobile.View" data-dojo-props='selected:true'>
-		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
-			Message Box <button onclick="show('dlg_message')">Show Dialog</button>
-		</div>
-		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
-			Confirmation Dialog <button onclick="show('dlg_confirm')">Show Dialog</button>
-		</div>
-		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
-			Login Dialog <button onclick="show('dlg_login')">Show Dialog</button>
-		</div>
-		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
-			Progress Indicator <button onclick="show_progress_indicator('dlg_progress','progress_indicator_container')">Show Dialog</button>
-		</div>
-		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
-			Volume Control <button onclick="show('dlg_volume')">Show Dialog</button>
-		</div>
-		<div data-dojo-type="dojox.mobile.RoundRect" data-dojo-props='shadow:true'>
-			Selectable List <button onclick="show('dlg_select')">Show Dialog</button>
-		</div>
-	</div>
-			
 </body>
 </html>

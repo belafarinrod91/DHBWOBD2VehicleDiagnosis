@@ -93,6 +93,11 @@ var app = {
     
 };
 
+//customized android backbutton
+document.addEventListener("backbutton", function(){
+	window.location.reload();
+}, false);
+
 
 //just generates random values atm... Here a function should be called receiving the actual values from the bt-adapter.
 function refreshValues(){

@@ -13,8 +13,11 @@ cordova.define("org.obd2.bluetooth.BluetoothConnection", function(require, expor
 					return cordova.exec(success, failure, "BluetoothConnection", "stopDiscoverDevices", []);
 							},
 	createBound : function (macAddress, success, failure) {
-        cordova.exec(success, failure, "BluetoothConnection", "createBound", [macAddress]);
-    }
+        cordova.exec(success, failure, "BluetoothConnection", "createBond", [macAddress]);
+    						},
+    writeMessage : function (macAddress, success, failure) {
+    	cordova.exec(success, failure, "BluetoothConnection", "writeMessage", [message]);
+    						}
 
 
 					}

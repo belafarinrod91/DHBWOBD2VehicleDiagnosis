@@ -275,7 +275,7 @@ public class BluetoothConnection extends CordovaPlugin {
             		break;
             	case MESSAGE_TOAST:
             		String message = msg.getData().getString(TOAST);
-            		Log.i(TAG, "Connection lost.");
+            		Log.i(TAG, "Connection lost : " +message);
             		break;
             	}
         	}

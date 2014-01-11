@@ -88,6 +88,10 @@ var app = {
     
     createBound : function(macAdress){
     	bConnection.createBound(macAdress);
+    },
+    
+    writeMessage : function(message){
+    	bConnection.writeMessage(message);
     }
     
     

@@ -1,3 +1,5 @@
+
+
 /*
  * Copyright (C) 2009 The Android Open Source Project
  *
@@ -50,7 +52,7 @@ public class ConnectionHandler {
     private static final UUID MY_UUID_SECURE =
         UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private static final UUID MY_UUID_INSECURE =
-        UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
+        UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     // Member fields
     private final BluetoothAdapter mAdapter;
@@ -220,8 +222,11 @@ public class ConnectionHandler {
         ConnectedThread r;
         // Synchronize a copy of the ConnectedThread
         synchronized (this) {
-            if (mState != STATE_CONNECTED) return;
+           Log.i(TAG, "State "+mState);
+           if (mState != STATE_CONNECTED) return;
+        	Log.i(TAG, "Connected Thread "+mConnectedThread);
             r = mConnectedThread;
+           
         }
         // Perform the write unsynchronized
         r.write(out);
@@ -491,3 +496,5 @@ public class ConnectionHandler {
         }
     }
 }
+
+

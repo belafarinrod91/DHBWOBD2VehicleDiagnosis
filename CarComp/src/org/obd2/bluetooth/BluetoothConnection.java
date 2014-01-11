@@ -173,10 +173,12 @@ public class BluetoothConnection extends CordovaPlugin {
 
 	public void connect(BluetoothDevice btDevice, CallbackContext callbackContext) {
 		if(!btDevice.equals(null)){
-			mConnectionHandler.connect(btDevice, true);
+			mConnectionHandler.connect(btDevice, false);
 			PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
 			result.setKeepCallback(true);
 			callbackContext.sendPluginResult(result);
+			
+			Log.i(TAG, "Status after connecting "+mConnectionHandler.getState());
 		}
 		else {
 			callbackContext.error("Could not connect to "+btDevice.getAddress());
@@ -191,11 +193,15 @@ public class BluetoothConnection extends CordovaPlugin {
 	public void writeMessage(String message){
 		if(mConnectionHandler.getState() != ConnectionHandler.STATE_CONNECTED){
 			Log.i(TAG, "Could not write to device");
+			Log.i(TAG, "State "+mConnectionHandler.getState());
 		}
 		
 		if(message.length() > 0) {
 			byte[] send = message.getBytes();
 			mConnectionHandler.write(send);
+			
+			Log.i(TAG, "sending "+message);
+			
 		}
 		else {
 			Log.i(TAG, "There is nothing to send.");
@@ -234,6 +240,7 @@ public class BluetoothConnection extends CordovaPlugin {
 	
 	
 	
+	
 	private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -262,11 +269,13 @@ public class BluetoothConnection extends CordovaPlugin {
             		byte[] writeBuf = (byte[]) msg.obj;
             		// construct a string from the buffer
             		String writeMessage = new String(writeBuf);
+            		Log.i(TAG, "Write "+writeMessage);
             		break;
             	case MESSAGE_READ:
             		byte[] readBuf = (byte[]) msg.obj;
             		// construct a string from the valid bytes in the buffer
             		String readMessage = new String(readBuf, 0, msg.arg1);
+            		Log.i(TAG, "Read "+readMessage);
             		break;
             	case MESSAGE_DEVICE_NAME:
             		// save the connected device's name

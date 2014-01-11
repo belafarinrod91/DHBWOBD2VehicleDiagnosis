@@ -42,7 +42,7 @@ require([
 				//just for testing:
 				//appendListElement("moin", "mohoin", "devices");
 				prog.stop();
-			}, 5000);
+			}, 10000);
 		}
 		
 		//hiding a progress indicator and its dialog

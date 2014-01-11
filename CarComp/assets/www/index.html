@@ -72,6 +72,13 @@
 			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="show_progress_indicator('devicesPopup','progress_indicator_container')">
 				Find BT-Devices
 			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.writeMessage('010D\r')">
+				Show Speed
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.writeMessage('0100\r')">
+				Initialize protocol
+			</li>
+			
 		</ul>
 		
 		<div id="devicesPopup" data-dojo-type="dojox.mobile.SimpleDialog">

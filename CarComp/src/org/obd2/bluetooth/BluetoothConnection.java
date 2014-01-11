@@ -27,6 +27,7 @@ public class BluetoothConnection extends CordovaPlugin {
 	
 	
 	// Member-Variables
+	
 	public BluetoothAdapter mBluetoothAdapter;
 	public JSONArray mListOfDiscoveredDevices;
 	public String mConnectedDeviceName;

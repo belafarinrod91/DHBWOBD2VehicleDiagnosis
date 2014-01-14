@@ -1,330 +1,528 @@
+/* Copyright (c) 2013
+*
+* author: Daniel Furini - dna.furini[at].gmail.com
+*
+*/
 package org.obd2.bluetooth;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Set;
+
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import android.net.ConnectivityManager;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
-import android.widget.Toast;
 
 public class BluetoothConnection extends CordovaPlugin {
-
-	//Android specific tag-messages
-	private static final String TAG ="BluetoothConnection";
-	private static final boolean D = true;
 	
-	
-	// Member-Variables
-	
-	public BluetoothAdapter mBluetoothAdapter;
-	public JSONArray mListOfDiscoveredDevices;
-	public String mConnectedDeviceName;
-	public ConnectionHandler mConnectionHandler;
-	
-	
-	
-	// Phonegap-specific actions, which call the function
-	public String ACTION_ENABLEBLUETOOTH = "enableBluetooth";
-	public String ACTION_DISABLEBLUETOOTH = "disableBluetooth";
-	public String ACTION_DISCOVERDECIVES = "discoverDevices";
-	public String ACTION_STOPDISCOVERDEVICES = "stopDiscoverDevices";
-	public String ACTION_CREATEBOND = "createBond";
-	public String ACTION_WRITEMESSAGE = "writeMessage";
-
-	// not usable, this moment 
-	public String ACTION_DISCONNECT = "disconnect";
-
-	//Message types sent from the ConnectionHandler
-	public static final int MESSAGE_STATE_CHANGE = 1;
-    public static final int MESSAGE_READ = 2;
-    public static final int MESSAGE_WRITE = 3;
-    public static final int MESSAGE_DEVICE_NAME = 4;
-    public static final int MESSAGE_TOAST = 5;
-    
-    public static final String DEVICE_NAME = "device_name";
-    public static final String TOAST = "toast";
-	
-	
-	
-	@Override
-	public boolean execute(String action, JSONArray args,
-			CallbackContext callbackContext) throws JSONException {
-
-		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-		if (mBluetoothAdapter.equals(null)) {
-			Log.i("obd2.bluetooth", "no adapter was found");
-		}
-		
-		mConnectionHandler = new ConnectionHandler(mHandler);
-		
-		
-		if (action.equals(ACTION_ENABLEBLUETOOTH)) {
-			enableBluetooth();
-		}
-		else if (action.equals(ACTION_DISABLEBLUETOOTH)) {
-			disableBluetooth();
-		}
-		else if (action.equals(ACTION_DISCOVERDECIVES)) {
-			discoverDevices();
-		}
-		else if (action.equals(ACTION_STOPDISCOVERDEVICES)) {
-			stopDiscovering(callbackContext);
-		}
-		else if (action.equals(ACTION_CREATEBOND)) {
-			try {
-				BluetoothDevice remoteBtDevice = createBond(args, callbackContext);
-				connect(remoteBtDevice, callbackContext);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		else if(action.equals(ACTION_WRITEMESSAGE)){
-			writeMessage(args.getString(0));
-		}
-		
-		else if (action.equals(ACTION_DISCONNECT)) {
-			disconnect();
-		}
-		
-		return false;
-
-	}
-
-	
-	
-	
-	
-	public void enableBluetooth() {
-		if (!mBluetoothAdapter.equals(null)) {
-			mBluetoothAdapter.enable();
-			Log.i("obd2.bluetooth", "bluetooth on");
-		}
-
-	}
-
-	public void disableBluetooth() {
-		if (mBluetoothAdapter.isEnabled()) {
-			mBluetoothAdapter.disable();
-			Log.i("obd2.bluetooth", "bluetooth off");
-		}
-	}
-
-	public void discoverDevices() {
-		mListOfDiscoveredDevices = new JSONArray();
-		Log.i("Log", "in the start searching method");
-		IntentFilter intentFilter = new IntentFilter(
-				BluetoothDevice.ACTION_FOUND);
-		cordova.getActivity().registerReceiver(mFoundDevices, intentFilter);
-		mBluetoothAdapter.startDiscovery();
-	}
-	
-	private void stopDiscovering(CallbackContext callbackContext) {
-		if (mBluetoothAdapter.isDiscovering()) {
-			mBluetoothAdapter.cancelDiscovery();
-		}
-
-		PluginResult res = new PluginResult(PluginResult.Status.OK,
-				mListOfDiscoveredDevices);
-		res.setKeepCallback(true);
-		callbackContext.sendPluginResult(res);
-
-		Log.i("Info", "Stopped discovering Devices !");
-
-	}
-	
-	
-	public BluetoothDevice createBond(JSONArray args, CallbackContext callbackContext) throws Exception {
-		String macAddress = args.getString(0);
-		Log.i("obd2.bluetooth", "Connect to MacAddress "+macAddress);
-		BluetoothDevice btDevice = mBluetoothAdapter.getRemoteDevice(macAddress);
-		Log.i("Device","Device "+btDevice);
-		
-		Class class1 = Class.forName("android.bluetooth.BluetoothDevice");
-        Method createBondMethod = class1.getMethod("createBond");  
-        Boolean returnValue = (Boolean) createBondMethod.invoke(btDevice);  
+		//Debug messages
+        private static final String TAG = "BluetoothPlugin";
+        public static final String DEVICE_NAME = "device_name";
+        public static final String TOAST = "toast";
         
-        if(btDevice.equals(null))
-        	throw new NullPointerException("Remote BluetoothDevice could not be paired !");
+        //Actions called from the UI
+        public static final String ACTION_ENABLE_BT = "enableBT";
+        public static final String ACTION_DISABLE_BT = "disableBT";
+        public static final String ACTION_IS_BT_ENABLED = "isBTEnabled";
+        public static final String ACTION_PAIR_BT = "pairBT";
+        public static final String ACTION_UNPAIR_BT = "unPairBT";
+        public static final String ACTION_CONNECT = "connect";
+        public static final String ACTION_DISCOVER_DEVICES = "discoverDevices";
+        public static final String ACTION_STOP_DISCOVER = "stopDiscover";
+        public static final String ACTION_LIST_BOUND_DEVICES = "listBoundDevices";
+        public static final String ACTION_IS_BOUND_BT = "isBound";
+        public static final String ACTION_WRITE_MESSAGE = "writeMessage";
         
-        return btDevice;
-    }       
-	
-	public void removeBond(BluetoothDevice btDevice) throws Exception {
-		  Class btClass = Class.forName("android.bluetooth.BluetoothDevice");
-	      Method removeBondMethod = btClass.getMethod("removeBond");  
-	      Boolean returnValue = (Boolean) removeBondMethod.invoke(btDevice);  
-	}
-	
+        //MemberVariables
+        private static BluetoothAdapter mBtAdapter;
+        private boolean mIsDiscovering = false;
+        private Context context;
+        private ConnectionHandler mConnectionHandler = null;
+        private ArrayList<BluetoothDevice> mDiscoveredDevices;
+        private CallbackContext mCallbackContext;
+        
+        //Messages
+        public static final int MESSAGE_STATE_CHANGE = 1;
+        public static final int MESSAGE_READ = 2;
+        public static final int MESSAGE_WRITE = 3;
+        public static final int MESSAGE_DEVICE_NAME = 4;
+        public static final int MESSAGE_TOAST = 5;
 
 
-	public void connect(BluetoothDevice btDevice, CallbackContext callbackContext) {
-		if(!btDevice.equals(null)){
-			mConnectionHandler.connect(btDevice, false);
-			PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
-			result.setKeepCallback(true);
-			callbackContext.sendPluginResult(result);
-			
-			Log.i(TAG, "Status after connecting "+mConnectionHandler.getState());
-		}
-		else {
-			callbackContext.error("Could not connect to "+btDevice.getAddress());
-		}
-	}
-	
-	
-	public void disconnect(){
-		
-	}
-	
-	public void writeMessage(String message){
-		if(mConnectionHandler.getState() != ConnectionHandler.STATE_CONNECTED){
-			Log.i(TAG, "Could not write to device");
-			Log.i(TAG, "State "+mConnectionHandler.getState());
-		}
-		
-		if(message.length() > 0) {
-			byte[] send = message.getBytes();
-			mConnectionHandler.write(send);
-			
-			Log.i(TAG, "sending "+message);
-			
-		}
-		else {
-			Log.i(TAG, "There is nothing to send.");
-		}
-	}
+       
 
+        public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+                super.initialize(cordova, webView);
+                context = this.cordova.getActivity().getBaseContext();
 
+                // Register for broadcasts when a device is discovered
+                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                context.registerReceiver(mReceiver, filter);
 
-	private BroadcastReceiver mFoundDevices = new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			Message msg = Message.obtain();
-			String action = intent.getAction();
-			if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-				Toast.makeText(context, "found Device !", Toast.LENGTH_SHORT).show();
+                // Register for broadcasts when discovery starts
+                filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+                context.registerReceiver(mReceiver, filter);
 
-				BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-				
-				
-				Log.i("FOUND", "Name " + device.getName() + "-" + device.getAddress());
-				JSONObject discoveredDevice = new JSONObject();
-				try {
-					discoveredDevice.put("name", device.getName());
-					discoveredDevice.put("adress", device.getAddress());
-					if (!isJSONInArray(discoveredDevice)) {
-						mListOfDiscoveredDevices.put(discoveredDevice);
-					}
+                // Register for broadcasts when discovery has finished
+                filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+                context.registerReceiver(mReceiver, filter);
+
+                // Register for broadcasts when connectivity state changes
+                filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+                context.registerReceiver(mReceiver, filter);
+
+                mConnectionHandler = new ConnectionHandler(context, mHandler);
+        }
+
+        @Override
+        public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
+                
+        		Log.d(TAG, "Plugin Called");
+                this.mCallbackContext = callbackContext;
+                PluginResult result = null;
+
+                
+                mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+                mDiscoveredDevices = new ArrayList<BluetoothDevice>();
+
+                if (ACTION_DISCOVER_DEVICES.equals(action)) {
+                	result = discoverDevices();
+
+                } else if (ACTION_IS_BT_ENABLED.equals(action)) {
+                    result = isEnabled();
+
+                } else if (ACTION_ENABLE_BT.equals(action)) {
+                    result = enableBluetooth();    
+                	
+                } else if (ACTION_DISABLE_BT.equals(action)) {
+                    result = disableBluetooth();
+                    
+                } else if (ACTION_PAIR_BT.equals(action)) {
+                    result = pair(args);
+                       
+                } else if (ACTION_UNPAIR_BT.equals(action)) {
+                	result = unpair(args);
+                        
+                } else if (ACTION_LIST_BOUND_DEVICES.equals(action)) {
+                	result = listBoundDevices();
+                        
+                } else if (ACTION_STOP_DISCOVER.equals(action)) {
+                	result = stopDiscover();
+
+                } else if (ACTION_IS_BOUND_BT.equals(action)) {
+                	result = isBound(args);
+                       
+                } else if (ACTION_WRITE_MESSAGE.equals(action)) {
+                	result = writeMessage(args);
+                        
+                } else if (ACTION_CONNECT.equals(action)) {
+                	result = connect(args);
+                } else {
+                        result = new PluginResult(PluginResult.Status.INVALID_ACTION);
+                        Log.d(TAG, "Invalid action : " + action + " passed");
+                }
+                this.mCallbackContext.sendPluginResult(result);
+                return true;
+        }
+        
+        
+        public PluginResult enableBluetooth(){
+        	PluginResult result = null;
+        	try {
+        		mBtAdapter.enable();
+                Log.d("BluetoothPlugin - " + ACTION_ENABLE_BT, "Returning "+ "Result: " + mBtAdapter.isEnabled());
+                result = new PluginResult(PluginResult.Status.OK, mBtAdapter.isEnabled());
+        	} catch (Exception Ex) {
+                Log.d("BluetoothPlugin - " + ACTION_ENABLE_BT, "Got Exception "+ Ex.getMessage());
+                result = new PluginResult(PluginResult.Status.ERROR);
+        	}
+        	return result;
+        }
+        
+        public PluginResult disableBluetooth(){
+        	 PluginResult result = null;
+        	 try {
+        		 if (mBtAdapter.isEnabled())
+                        mBtAdapter.disable();
+        		 Log.d("BluetoothPlugin - " + ACTION_DISABLE_BT, "Returning "+ "Result: " + mBtAdapter.isEnabled());
+                 result = new PluginResult(PluginResult.Status.OK, mBtAdapter.isEnabled());
+        	 } catch (Exception Ex) {
+                 Log.d("BluetoothPlugin - " + ACTION_DISABLE_BT, "Got Exception " + Ex.getMessage());
+                 result = new PluginResult(PluginResult.Status.ERROR);
+        	 }
+        	 return result;
+        }
+        
+        public PluginResult isEnabled(){
+        	PluginResult result = null;
+        	 try {
+        		 Log.d("BluetoothPlugin - " + ACTION_DISABLE_BT, "Returning "+ "Result: " + mBtAdapter.isEnabled());
+                 result = new PluginResult(PluginResult.Status.OK, mBtAdapter.isEnabled());
+        	 } catch (Exception Ex) {
+                 Log.d("BluetoothPlugin - " + ACTION_DISABLE_BT, "Got Exception " + Ex.getMessage());
+                 result = new PluginResult(PluginResult.Status.ERROR);
+        	 }
+        	 return result;
+        }
+        
+        public PluginResult discoverDevices(){
+        	PluginResult result = null;
+        	try {
+        		 mDiscoveredDevices.clear();
+                 mIsDiscovering = true;
+                 
+                 if (mBtAdapter.isDiscovering()) {
+                         mBtAdapter.cancelDiscovery();
+                 }
+                 mBtAdapter.startDiscovery();
+
+                 result = new PluginResult(PluginResult.Status.NO_RESULT);
+                 result.setKeepCallback(true);
+        	} catch (Exception Ex) {
+                 Log.d("BluetoothPlugin - " + ACTION_DISCOVER_DEVICES, "Got Exception " + Ex.getMessage());
+                 result = new PluginResult(PluginResult.Status.ERROR);
+        	}
+        	return result;
+        }
+        
+        public PluginResult stopDiscover(){
+        	PluginResult result = null;
+        	boolean stopped = false;
+        	try {
+                if (mBtAdapter.isDiscovering()) {
+                        Log.i(TAG, "Stop discovery...");
+                        stopped = mBtAdapter.cancelDiscovery();
+                        mIsDiscovering = false;
+                }
+                
+                JSONArray discoveredDevices = createJSONArrayOfDiscoveredDevices();
+                
+                Log.d("BluetoothPlugin - " + ACTION_STOP_DISCOVER, "Returning " + "Result: " + stopped);
+                result = new PluginResult(PluginResult.Status.OK, discoveredDevices);
+        	} catch (Exception Ex) {
+                Log.d("BluetoothPlugin - " + ACTION_STOP_DISCOVER, "Got Exception " + Ex.getMessage());
+                result = new PluginResult(PluginResult.Status.ERROR);
+        	}
+        	return result;
+        }
+        
+        
+        public PluginResult pair(JSONArray args){
+        	PluginResult result = null;
+        	try {
+                 String addressDevice = args.getString(0);
+
+                 if (mBtAdapter.isDiscovering()) {
+                         mBtAdapter.cancelDiscovery();
+                 }
+                 BluetoothDevice device = mBtAdapter.getRemoteDevice(addressDevice);
+                 boolean paired = false;
+                 Log.d(TAG,	"Pairing with Bluetooth device with name "
+                		 + device.getName() + " and address "
+                         + device.getAddress());
+
+                 	try {
+                         Method m = device.getClass().getMethod("createBond");
+                         paired = (Boolean) m.invoke(device);
+                 	} catch (Exception e) {
+                         e.printStackTrace();
+                 	}
+
+                 Log.d("BluetoothPlugin - " + ACTION_PAIR_BT, "Returning "+ "Result: " + paired);
+                 result = new PluginResult(PluginResult.Status.OK, paired);
+        	} catch (Exception Ex) {
+                 Log.d("BluetoothPlugin - " + ACTION_PAIR_BT, "Got Exception "
+                                 + Ex.getMessage());
+                 result = new PluginResult(PluginResult.Status.ERROR);
+        	}
+        	return result;
+        }
+        
+        
+        public PluginResult unpair(JSONArray args){
+        	PluginResult result = null;
+        	try {
+                String addressDevice = args.getString(0);
+
+                if (mBtAdapter.isDiscovering()) {
+                	mBtAdapter.cancelDiscovery();
+                }
+
+                BluetoothDevice device = mBtAdapter.getRemoteDevice(addressDevice);
+                boolean unpaired = false;
+
+                Log.d(TAG,"Unpairing Bluetooth device with " + device.getName()+ " and address " + device.getAddress());
+                
+                try {
+                        Method m = device.getClass().getMethod("removeBond");
+                        unpaired = (Boolean) m.invoke(device);
+                	} 
+                catch (Exception e) {
+                        e.printStackTrace();
+                }
+                Log.d("BluetoothPlugin - " + ACTION_UNPAIR_BT, "Returning "
+                                + "Result: " + unpaired);
+                result = new PluginResult(PluginResult.Status.OK, unpaired);
+        	} catch (Exception Ex) {
+                Log.d("BluetoothPlugin - " + ACTION_UNPAIR_BT, "Got Exception "+ Ex.getMessage());
+                result = new PluginResult(PluginResult.Status.ERROR);
+        	}
+        	return result;
+        }
+        
+        public PluginResult listBoundDevices(){
+        	PluginResult result = null;
+        	try {
+                Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+                int count = 0;
+                String resultBoundDevices = "[ ";
+                if (pairedDevices.size() > 0) {
+                        for (BluetoothDevice device : pairedDevices) {
+                                Log.i(TAG, device.getName() + " " + device.getAddress()+ " " + device.getBondState());
+                                if ((device.getName() != null)&& (device.getBluetoothClass() != null)) {
+                                        resultBoundDevices = resultBoundDevices
+                                                        + " { \"name\" : \""
+                                                        + device.getName()
+                                                        + "\" ,"
+                                                        + "\"address\" : \""
+                                                        + device.getAddress()
+                                                        + "\" ,"
+                                                        + "\"class\" : \""
+                                                        + device.getBluetoothClass().getDeviceClass() + "\" }";
+                                        if (count < pairedDevices.size() - 1)
+                                                resultBoundDevices = resultBoundDevices + ",";
+                                } else
+                                        Log.i(TAG,device.getName()+ " Problems retrieving attributes. Device not added ");
+                         count++;
+                        }
+                }
+
+                resultBoundDevices = resultBoundDevices + "] ";
+                Log.d("BluetoothPlugin - " + ACTION_LIST_BOUND_DEVICES,"Returning " + resultBoundDevices);
+                result = new PluginResult(PluginResult.Status.OK, resultBoundDevices);
+        	} catch (Exception Ex) {
+                Log.d("BluetoothPlugin - " + ACTION_LIST_BOUND_DEVICES, "Got Exception " + Ex.getMessage());
+                result = new PluginResult(PluginResult.Status.ERROR);
+        	}
+        	return result;
+        }
+        
+        public PluginResult isBound(JSONArray args){
+        	PluginResult result = null;
+        	 try {
+                
+                 String addressDevice = args.getString(0);
+                 BluetoothDevice device = mBtAdapter.getRemoteDevice(addressDevice);
+                 Log.i(TAG, "BT Device in state " + device.getBondState());
+
+                 boolean state = false;
+
+                 if (device != null && device.getBondState() == 12)
+                         state = true;
+                 else
+                         state = false;
+
+                 Log.d(TAG, "Is Bound with " + device.getName() + " - address " + device.getAddress());
+                 Log.d("BluetoothPlugin - " + ACTION_IS_BOUND_BT, "Returning " + "Result: " + state);
+                 result = new PluginResult(PluginResult.Status.OK, state);
+
+        	 } catch (Exception Ex) {
+                 Log.d("BluetoothPlugin - " + ACTION_IS_BOUND_BT,"Got Exception " + Ex.getMessage());
+                 result = new PluginResult(PluginResult.Status.ERROR);
+        	 }
+        	 return result;
+        }
+        
+        
+        public PluginResult connect(JSONArray args){
+        	PluginResult result = null;
+        	String macAddress;
+            
+                    //macAddress = args.getString(0);
+            		macAddress = "EC:55:F9:EE:16:75";
+                    BluetoothDevice device = mBtAdapter.getRemoteDevice(macAddress);
+                    mConnectionHandler.connect(device, false);
+                    
+                    result = new PluginResult(PluginResult.Status.OK, true);
+           
+            return result;
+        }
+        
+        public PluginResult writeMessage(JSONArray args){
+        	PluginResult result = null;
+        	try {
+                    String msg = args.getString(0);
+                    msg = msg+'\r';
+                    if (mConnectionHandler.getState() != ConnectionHandler.STATE_CONNECTED) {
+                    	Log.d(TAG, "Can't send, not connected");
+                        result = new PluginResult(PluginResult.Status.ERROR);
+                    }
+
+                    if (msg.length() > 0) {
+                        byte[] send = msg.getBytes();
+                        mConnectionHandler.write(send);
+                        Log.d("BluetoothPlugin - " + ACTION_WRITE_MESSAGE, "Returning "+ "Result: " + send);
+                        result = new PluginResult(PluginResult.Status.OK, send);
+                    }
+                    else {
+                    	Log.d(TAG, "Nothing to send here.");
+                        result = new PluginResult(PluginResult.Status.ERROR);
+                    }
+        	} catch (Exception Ex) {
+                    Log.d("BluetoothPlugin - " + ACTION_WRITE_MESSAGE, "Got Exception "+ Ex.getMessage());
+                    result = new PluginResult(PluginResult.Status.ERROR);
+            }
+        	return result;
+        }
+        
+        
+        
+
+        public void setDiscovering(boolean state) {
+                mIsDiscovering = state;
+        }
+
+        public void addDevice(BluetoothDevice device) {
+                if (!mDiscoveredDevices.contains(device)) {
+                        Log.i(TAG, "Device stored ");
+                        mDiscoveredDevices.add(device);
+                }
+        }
+        
+        
+        public JSONArray createJSONArrayOfDiscoveredDevices(){
+        	JSONArray result = new JSONArray();
+        	
+        	for(BluetoothDevice device : mDiscoveredDevices){
+        		JSONObject jDevice = new JSONObject();
+        		try {
+					jDevice.put("name", device.getName());
+					jDevice.put("address", device.getAddress());
 				} catch (JSONException e) {
+					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-
-			}
-
-		}
-	};
-	
-	
-	
-	
-	private final Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-            
-            case MESSAGE_STATE_CHANGE:
-                if(D) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
-                
-                switch (msg.arg1) {
-                	case ConnectionHandler.STATE_CONNECTED:
-                		Log.i(TAG, "ConnectionHandler.STATE_CONNECTED !");
-                		break;
-                	case ConnectionHandler.STATE_CONNECTING:
-                		Log.i(TAG, "ConnectionHandler.STATE_CONNECTING !");
-                		break;
-                	case ConnectionHandler.STATE_LISTEN:
-                		Log.i(TAG, "ConnectionHandler.STATE_LISTEN !");
-                		break;
-                	case ConnectionHandler.STATE_NONE:
-                		Log.i(TAG, "ConnectionHandler.STATE_NONE !");
-                		break;
-                	}
-                	break;
-            	
-            	case MESSAGE_WRITE:
-            		byte[] writeBuf = (byte[]) msg.obj;
-            		// construct a string from the buffer
-            		String writeMessage = new String(writeBuf);
-            		Log.i(TAG, "Write "+writeMessage);
-            		break;
-            	case MESSAGE_READ:
-            		byte[] readBuf = (byte[]) msg.obj;
-            		// construct a string from the valid bytes in the buffer
-            		String readMessage = new String(readBuf, 0, msg.arg1);
-            		Log.i(TAG, "Read "+readMessage);
-            		break;
-            	case MESSAGE_DEVICE_NAME:
-            		// save the connected device's name
-            		mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
-            		Log.i(TAG, mConnectedDeviceName);
-            		break;
-            	case MESSAGE_TOAST:
-            		String message = msg.getData().getString(TOAST);
-            		Log.i(TAG, "Connection lost : " +message);
-            		break;
-            	}
+        		        		
         	}
-    	};
-    	
-    	
-	
-   /**
-	 * This function checks, whether a discovered Bluetooth-Device is already in the 
-	 * result-list. If a device is already in list, the function returns true, otherwise
-	 * false.
-	 * 
-	 * @param discoveredDevice - device which should be checked
-	 * @return
-	 */
-	public boolean isJSONInArray(JSONObject discoveredDevice) {
-		boolean result = false;
+        	
+        	return result;
+        }
+        
+        
 
-		try {
-			for (int cnt = 0; cnt < mListOfDiscoveredDevices.length(); cnt++) {
-				String listElement;
+        @Override
+        public void onDestroy() {
+                Log.i(TAG, "onDestroy " + this.getClass());
+                context.unregisterReceiver(mReceiver);
+                super.onDestroy();
+        }
 
-				listElement = mListOfDiscoveredDevices.get(cnt).toString();
+        
+        private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+                public void onReceive(Context context, Intent intent) {
 
-				String checkElement = discoveredDevice.toString();
+                        String action = intent.getAction();
+                        Log.i(TAG, "Action: " + action);
 
-				if (listElement.equals(checkElement)) {
-					result = true;
-					System.out.println(listElement + "-" + checkElement);
-				}
-			}
+                        if (BluetoothDevice.ACTION_FOUND.equals(action)) {
 
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return result;
-	}
-	
-	
-	
+                                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                                Log.i(TAG, "Device found " + device.getName() + " "+ device.getBondState() + " " + device.getAddress());
+                                if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+                                        Log.i(TAG, "Device not paired");
+                                        addDevice(device);
+                                } else
+                                        Log.i(TAG, "Device already paired");
+
+                        } else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
+                                Log.i(TAG, "Discovery started");
+                                setDiscovering(true);
+                        } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                                Log.i(TAG, "Discovery finilized");
+                                setDiscovering(false);
+                                JSONArray devicesFound = new JSONArray();
+                                for (BluetoothDevice device : mDiscoveredDevices) {
+                                        Log.i(TAG, device.getName() + " " + device.getAddress()+ " " + device.getBondState());
+                                        if ((device.getName() != null) && (device.getBluetoothClass() != null)) {
+                                                JSONObject theDevice = new JSONObject();
+                                                try {
+                                                	theDevice.put("name", device.getName());
+                                                     theDevice.put("address", device.getAddress());
+                                                     theDevice.put("class", device.getBluetoothClass().getDeviceClass());
+                                                     devicesFound.put(theDevice);
+                                                } catch (JSONException e) {
+                                                     Log.e(TAG, e.getMessage(), e);
+                                                }
+                                        } else {
+                                                Log.i(TAG, device.getName()+ " Problems retrieving attributes. Device not added ");
+                                        }
+                                }
+
+                                Log.d("BluetoothPlugin - " + ACTION_DISCOVER_DEVICES, "Returning: " + devicesFound);
+                                PluginResult result = new PluginResult(PluginResult.Status.OK, devicesFound);
+                                mCallbackContext.sendPluginResult(result);
+                        }
+                }
+        };
+
+        private final Handler mHandler = new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                        switch (msg.what) {
+                        case MESSAGE_STATE_CHANGE:
+                                switch (msg.arg1) {
+                                case ConnectionHandler.STATE_CONNECTED:
+                                        Log.d(TAG, "Handler - BluetoothChatService.STATE_CONNECTED");
+                                        break;
+                                case ConnectionHandler.STATE_CONNECTING:
+                                        Log.d(TAG,"Handler - BluetoothChatService.STATE_CONNECTING");
+                                        break;
+                                case ConnectionHandler.STATE_LISTEN:
+                                		Log.d(TAG,"Handler - BluetoothChatService.STATE_LISTEN");
+                                		break;
+                                case ConnectionHandler.STATE_NONE:
+                                        Log.d(TAG, "Handler - BluetoothChatService.STATE_NONE");
+                                        break;
+                                }
+                                break;
+                        case MESSAGE_WRITE:
+                                byte[] writeBuf = (byte[]) msg.obj;
+                                Log.d(TAG, "MESSAGE_WRITE");
+                                break;
+                        case MESSAGE_READ:
+                                byte[] readBuf = (byte[]) msg.obj;
+                                String readMessage = new String(readBuf, 0, msg.arg1);
+                                Log.d(TAG, "MESSAGE_READ: " + readMessage);
+                                //SendToFront(readMessage);
+                                break;
+                        case MESSAGE_DEVICE_NAME:
+                                Log.d(TAG, "MESSAGE_DEVICE_NAME");
+                                break;
+                        case MESSAGE_TOAST:
+                                Log.d(TAG, "MESSAGE_TOAST");
+                                break;
+                      
+                        }
+                }
+        };
+
+        public void SendToFront(String _data) {
+                this.webView.sendJavascript("receiverBT('" + _data + "');");
+        }
 
 }

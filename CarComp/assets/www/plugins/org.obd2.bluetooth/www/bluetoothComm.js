@@ -1,24 +1,25 @@
 cordova.define("org.obd2.bluetooth.BluetoothConnection", function(require, exports, module) {var bConnection = {
-	enableBluetooth : function(success, failure) {
-					cordova.exec(success, failure, "BluetoothConnection",
-							"enableBluetooth", []); 
-							},
-	disableBluetooth: function(success, failure){
-					cordova.exec(success, failure, "BluetoothConnection", "disableBluetooth", []);
-							},
-	discoverDevices : function(success, failure){
-					cordova.exec(success, failure, "BluetoothConnection", "discoverDevices", []);
-							},
-	stopDiscovering: function(success,failure) {
-					return cordova.exec(success, failure, "BluetoothConnection", "stopDiscoverDevices", []);
-							},
-	createBound : function (macAddress, success, failure) {
-        cordova.exec(success, failure, "BluetoothConnection", "createBond", [macAddress]);
-    						},
-    writeMessage : function (message, success, failure) {
-    	cordova.exec(success, failure, "BluetoothConnection", "writeMessage", [message]);
-    						}
+	
+	enableBT : function(success, failure) {cordova.exec(success, failure, "BluetoothConnection","enableBT", []); },
+	
+	disableBT: function(success, failure){cordova.exec(success, failure, "BluetoothConnection", "disableBT", []);},
+	
+	isBTEnabled: function(success, failure){cordova.exec(success, failure, "BluetoothConnection", "isBTEnabled", []);},
+	
+	discoverDevices : function(success, failure){cordova.exec(success, failure, "BluetoothConnection", "discoverDevices", []);},
 
+	stopDiscover: function(success,failure) {
+		return cordova.exec(success, failure, "BluetoothConnection", "stopDiscover", []);},
+		
+	pair : function (macAddress, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "pair", [macAddress]);},
+	
+	unpair : function (macAddress, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "pair", [macAddress]);},
+	
+	listBoundDevices : function (success, failure) {cordova.exec(success, failure, "BluetoothConnection", "listBoundDevices", []);},
 
-					}
+	connect: function(address, success, failure){cordova.exec(success, failure, "BluetoothConnection", "connect", [address]);},
+	
+	writeMessage : function (message, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "writeMessage", [message]);}
+	
+	}
 module.exports = bConnection;});

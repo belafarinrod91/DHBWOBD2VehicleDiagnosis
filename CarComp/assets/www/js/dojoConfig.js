@@ -38,11 +38,11 @@ require([
 			prog.start();
 			app.discoverDevices();
 			setTimeout(function(){
-				app.stopDiscoveringDevices();
+				app.stopDiscover();
 				//just for testing:
 				//appendListElement("moin", "mohoin", "devices");
 				prog.stop();
-			}, 10000);
+			}, 5000);
 		}
 		
 		//hiding a progress indicator and its dialog
@@ -61,7 +61,7 @@ require([
 	             onClick : function() {
 	            	hide_progress_indicator("devicesPopup");
 	            	dom.byId("btConnectionStatus").innerHTML="connecting to : "+name+" ...";
-	             	if(app.createBound(address)){
+	             	if(app.pair(address)){
 	             		dom.byId("btConnectionStatus").innerHTML="Is connected to : "+name+" !";
 	             	}else{
 	             		dom.byId("btConnectionStatus").innerHTML="Connection Error.";

@@ -72,12 +72,17 @@
 			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="show_progress_indicator('devicesPopup','progress_indicator_container')">
 				Find BT-Devices
 			</li>
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.writeMessage('010D\r')">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.listBoundDevices()">
+				Paired Devices
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.connect('message')">
+				Connect - hard coded address ! -
+			</li>
+			
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.writeMessage('010D')">
 				Show Speed
 			</li>
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.writeMessage('0100\r')">
-				Initialize protocol
-			</li>
+			
 			
 		</ul>
 		

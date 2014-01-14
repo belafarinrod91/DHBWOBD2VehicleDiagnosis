@@ -47,18 +47,26 @@ var app = {
         console.log('Received Event: ' + id);
     },
     
-    enable : function() {
-        bConnection.enableBluetooth();
+    enableBT : function() {
+        bConnection.enableBT();
+    },
+    
+    disableBT : function() {
+        bConnection.disableBT();
+    },
+    
+    isBTEnabled : function() {
+        bConnection.isBTEnabled();
     },
     
     discoverDevices : function(){
     	bConnection.discoverDevices();
     },
     
-    stopDiscoveringDevices : function(){
+    stopDiscover : function(){
     	var devices = "";
     	console.log("DISCOVERING ENDED");
-    	bConnection.stopDiscovering(
+    	bConnection.stopDiscover(
     	   function(r) { 
     		   console.log(JSON.stringify(r));
     		   var devices = r;
@@ -86,15 +94,25 @@ var app = {
     	);
     },
     
-    createBound : function(macAdress){
-    	bConnection.createBound(macAdress);
+    connect : function(address) {
+        bConnection.connect(address);
+    },
+    
+    pair : function(macAdress){
+    	bConnection.pair(macAdress);
+    },
+    
+    unpair : function(macAdress){
+    	bConnection.unpair(macAdress);
+    },
+    
+    listBoundDevices : function(){
+    	bConnection.listBoundDevices();
     },
     
     writeMessage : function(message){
     	bConnection.writeMessage(message);
     }
-    
-    
 };
 
 //customized android backbutton

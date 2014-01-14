@@ -1,21 +1,8 @@
-
-
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+/* Copyright (c) 2013
+*
+* author: Daniel Furini - dna.furini[at].gmail.com
+*
+*/
 package org.obd2.bluetooth;
 
 import java.io.IOException;
@@ -33,12 +20,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-/**
- * This class does all the work for setting up and managing Bluetooth
- * connections with other devices. It has a thread that listens for
- * incoming connections, a thread for connecting with a device, and a
- * thread for performing data transmissions when connected.
- */
 public class ConnectionHandler {
     // Debugging
     private static final String TAG = "BluetoothChatService";
@@ -54,6 +35,7 @@ public class ConnectionHandler {
     private static final UUID MY_UUID_INSECURE =
         UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
+    
     // Member fields
     private final BluetoothAdapter mAdapter;
     private final Handler mHandler;
@@ -64,26 +46,26 @@ public class ConnectionHandler {
     private int mState;
 
     // Constants that indicate the current connection state
-    public static final int STATE_NONE = 0;       // we're doing nothing
-    public static final int STATE_LISTEN = 1;     // now listening for incoming connections
+    public static final int STATE_NONE = 0; // we're doing nothing
+    public static final int STATE_LISTEN = 1; // now listening for incoming connections
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
-    public static final int STATE_CONNECTED = 3;  // now connected to a remote device
+    public static final int STATE_CONNECTED = 3; // now connected to a remote device
 
     /**
-     * Constructor. Prepares a new BluetoothChat session.
-     * @param context  The UI Activity Context
-     * @param handler  A Handler to send messages back to the UI Activity
-     */
-    public ConnectionHandler(Handler handler) {
+* Constructor. Prepares a new BluetoothChat session.
+* @param context The UI Activity Context
+* @param handler A Handler to send messages back to the UI Activity
+*/
+    public ConnectionHandler(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         mHandler = handler;
     }
 
     /**
-     * Set the current state of the chat connection
-     * @param state  An integer defining the current connection state
-     */
+* Set the current state of the chat connection
+* @param state An integer defining the current connection state
+*/
     private synchronized void setState(int state) {
         if (D) Log.d(TAG, "setState() " + mState + " -> " + state);
         mState = state;
@@ -93,14 +75,14 @@ public class ConnectionHandler {
     }
 
     /**
-     * Return the current connection state. */
+* Return the current connection state. */
     public synchronized int getState() {
         return mState;
     }
 
     /**
-     * Start the chat service. Specifically start AcceptThread to begin a
-     * session in listening (server) mode. Called by the Activity onResume() */
+* Start the chat service. Specifically start AcceptThread to begin a
+* session in listening (server) mode. Called by the Activity onResume() */
     public synchronized void start() {
         if (D) Log.d(TAG, "start");
 
@@ -124,10 +106,10 @@ public class ConnectionHandler {
     }
 
     /**
-     * Start the ConnectThread to initiate a connection to a remote device.
-     * @param device  The BluetoothDevice to connect
-     * @param secure Socket Security type - Secure (true) , Insecure (false)
-     */
+* Start the ConnectThread to initiate a connection to a remote device.
+* @param device The BluetoothDevice to connect
+* @param secure Socket Security type - Secure (true) , Insecure (false)
+*/
     public synchronized void connect(BluetoothDevice device, boolean secure) {
         if (D) Log.d(TAG, "connect to: " + device);
 
@@ -146,10 +128,10 @@ public class ConnectionHandler {
     }
 
     /**
-     * Start the ConnectedThread to begin managing a Bluetooth connection
-     * @param socket  The BluetoothSocket on which the connection was made
-     * @param device  The BluetoothDevice that has been connected
-     */
+* Start the ConnectedThread to begin managing a Bluetooth connection
+* @param socket The BluetoothSocket on which the connection was made
+* @param device The BluetoothDevice that has been connected
+*/
     public synchronized void connected(BluetoothSocket socket, BluetoothDevice
             device, final String socketType) {
         if (D) Log.d(TAG, "connected, Socket Type:" + socketType);
@@ -185,8 +167,8 @@ public class ConnectionHandler {
     }
 
     /**
-     * Stop all threads
-     */
+* Stop all threads
+*/
     public synchronized void stop() {
         if (D) Log.d(TAG, "stop");
 
@@ -213,28 +195,25 @@ public class ConnectionHandler {
     }
 
     /**
-     * Write to the ConnectedThread in an unsynchronized manner
-     * @param out The bytes to write
-     * @see ConnectedThread#write(byte[])
-     */
+* Write to the ConnectedThread in an unsynchronized manner
+* @param out The bytes to write
+* @see ConnectedThread#write(byte[])
+*/
     public void write(byte[] out) {
         // Create temporary object
         ConnectedThread r;
         // Synchronize a copy of the ConnectedThread
         synchronized (this) {
-           Log.i(TAG, "State "+mState);
-           if (mState != STATE_CONNECTED) return;
-        	Log.i(TAG, "Connected Thread "+mConnectedThread);
+            if (mState != STATE_CONNECTED) return;
             r = mConnectedThread;
-           
         }
         // Perform the write unsynchronized
         r.write(out);
     }
 
     /**
-     * Indicate that the connection attempt failed and notify the UI Activity.
-     */
+* Indicate that the connection attempt failed and notify the UI Activity.
+*/
     private void connectionFailed() {
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(BluetoothConnection.MESSAGE_TOAST);
@@ -248,8 +227,8 @@ public class ConnectionHandler {
     }
 
     /**
-     * Indicate that the connection was lost and notify the UI Activity.
-     */
+* Indicate that the connection was lost and notify the UI Activity.
+*/
     private void connectionLost() {
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(BluetoothConnection.MESSAGE_TOAST);
@@ -263,10 +242,10 @@ public class ConnectionHandler {
     }
 
     /**
-     * This thread runs while listening for incoming connections. It behaves
-     * like a server-side client. It runs until a connection is accepted
-     * (or until cancelled).
-     */
+* This thread runs while listening for incoming connections. It behaves
+* like a server-side client. It runs until a connection is accepted
+* (or until cancelled).
+*/
     private class AcceptThread extends Thread {
         // The local server socket
         private final BluetoothServerSocket mmServerSocket;
@@ -282,7 +261,7 @@ public class ConnectionHandler {
                     tmp = mAdapter.listenUsingRfcommWithServiceRecord(NAME_SECURE,
                         MY_UUID_SECURE);
                 } else {
-                    tmp = mAdapter.listenUsingInsecureRfcommWithServiceRecord(
+                    tmp = mAdapter.listenUsingRfcommWithServiceRecord(
                             NAME_INSECURE, MY_UUID_INSECURE);
                 }
             } catch (IOException e) {
@@ -348,10 +327,10 @@ public class ConnectionHandler {
 
 
     /**
-     * This thread runs while attempting to make an outgoing connection
-     * with a device. It runs straight through; the connection either
-     * succeeds or fails.
-     */
+* This thread runs while attempting to make an outgoing connection
+* with a device. It runs straight through; the connection either
+* succeeds or fails.
+*/
     private class ConnectThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
@@ -369,7 +348,7 @@ public class ConnectionHandler {
                     tmp = device.createRfcommSocketToServiceRecord(
                             MY_UUID_SECURE);
                 } else {
-                    tmp = device.createInsecureRfcommSocketToServiceRecord(
+                    tmp = device.createRfcommSocketToServiceRecord(
                             MY_UUID_INSECURE);
                 }
             } catch (IOException e) {
@@ -421,9 +400,9 @@ public class ConnectionHandler {
     }
 
     /**
-     * This thread runs during a connection with a remote device.
-     * It handles all incoming and outgoing transmissions.
-     */
+* This thread runs during a connection with a remote device.
+* It handles all incoming and outgoing transmissions.
+*/
     private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
@@ -464,17 +443,15 @@ public class ConnectionHandler {
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
-                    // Start the service over to restart listening mode
-                    ConnectionHandler.this.start();
                     break;
                 }
             }
         }
 
         /**
-         * Write to the connected OutStream.
-         * @param buffer  The bytes to write
-         */
+* Write to the connected OutStream.
+* @param buffer The bytes to write
+*/
         public void write(byte[] buffer) {
             try {
                 mmOutStream.write(buffer);
@@ -496,5 +473,3 @@ public class ConnectionHandler {
         }
     }
 }
-
-

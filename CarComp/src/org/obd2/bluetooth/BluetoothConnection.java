@@ -47,6 +47,7 @@ public class BluetoothConnection extends CordovaPlugin {
         public static final String ACTION_LIST_BOUND_DEVICES = "listBoundDevices";
         public static final String ACTION_IS_BOUND_BT = "isBound";
         public static final String ACTION_WRITE_MESSAGE = "writeMessage";
+        public static final String ACTION_OBD2_DATA_WRAPPER = "obd2Wrapper";
         
         //MemberVariables
         private static BluetoothAdapter mBtAdapter;
@@ -54,6 +55,9 @@ public class BluetoothConnection extends CordovaPlugin {
         private Context context;
         private ConnectionHandler mConnectionHandler = null;
         private ArrayList<BluetoothDevice> mDiscoveredDevices;
+        private JSONArray mJSONDiscoveredDevices;
+        
+        
         private CallbackContext mCallbackContext;
         
         //Messages
@@ -101,8 +105,8 @@ public class BluetoothConnection extends CordovaPlugin {
                 mDiscoveredDevices = new ArrayList<BluetoothDevice>();
 
                 if (ACTION_DISCOVER_DEVICES.equals(action)) {
-                	result = discoverDevices();
-
+                	result = discoverDevices(callbackContext);
+                	
                 } else if (ACTION_IS_BT_ENABLED.equals(action)) {
                     result = isEnabled();
 
@@ -123,7 +127,7 @@ public class BluetoothConnection extends CordovaPlugin {
                         
                 } else if (ACTION_STOP_DISCOVER.equals(action)) {
                 	result = stopDiscover();
-
+                	
                 } else if (ACTION_IS_BOUND_BT.equals(action)) {
                 	result = isBound(args);
                        
@@ -132,6 +136,9 @@ public class BluetoothConnection extends CordovaPlugin {
                         
                 } else if (ACTION_CONNECT.equals(action)) {
                 	result = connect(args);
+                } else if (ACTION_OBD2_DATA_WRAPPER.equals(action)){
+                	obd2Wrapper(args, callbackContext);
+                	
                 } else {
                         result = new PluginResult(PluginResult.Status.INVALID_ACTION);
                         Log.d(TAG, "Invalid action : " + action + " passed");
@@ -180,19 +187,26 @@ public class BluetoothConnection extends CordovaPlugin {
         	 return result;
         }
         
-        public PluginResult discoverDevices(){
+        public PluginResult discoverDevices(CallbackContext callbackContext){
         	PluginResult result = null;
         	try {
         		 mDiscoveredDevices.clear();
-                 mIsDiscovering = true;
+                 setDiscovering(true);
                  
                  if (mBtAdapter.isDiscovering()) {
                          mBtAdapter.cancelDiscovery();
                  }
                  mBtAdapter.startDiscovery();
 
-                 result = new PluginResult(PluginResult.Status.NO_RESULT);
+                 while(mIsDiscovering){}
+                 
+                 
+                 mJSONDiscoveredDevices = createJSONArrayOfDiscoveredDevices();
+                 
+                 
+                 result = new PluginResult(PluginResult.Status.OK, mJSONDiscoveredDevices);
                  result.setKeepCallback(true);
+                 callbackContext.sendPluginResult(result);
         	} catch (Exception Ex) {
                  Log.d("BluetoothPlugin - " + ACTION_DISCOVER_DEVICES, "Got Exception " + Ex.getMessage());
                  result = new PluginResult(PluginResult.Status.ERROR);
@@ -202,27 +216,23 @@ public class BluetoothConnection extends CordovaPlugin {
         
         public PluginResult stopDiscover(){
         	PluginResult result = null;
-        	boolean stopped = false;
+        	
         	try {
-                if (mBtAdapter.isDiscovering()) {
-                        Log.i(TAG, "Stop discovery...");
-                        stopped = mBtAdapter.cancelDiscovery();
-                        mIsDiscovering = false;
-                }
+        		
+        		setDiscovering(true);
                 
-                JSONArray discoveredDevices = createJSONArrayOfDiscoveredDevices();
-                
-                Log.d("BluetoothPlugin - " + ACTION_STOP_DISCOVER, "Returning " + "Result: " + stopped);
-                result = new PluginResult(PluginResult.Status.OK, discoveredDevices);
+                Log.i(TAG,"BluetoothPlugin - " + ACTION_STOP_DISCOVER);
+                result = new PluginResult(PluginResult.Status.OK);
+        	
         	} catch (Exception Ex) {
                 Log.d("BluetoothPlugin - " + ACTION_STOP_DISCOVER, "Got Exception " + Ex.getMessage());
                 result = new PluginResult(PluginResult.Status.ERROR);
         	}
         	return result;
+      
+        
         }
-        
-        
-        public PluginResult pair(JSONArray args){
+     public PluginResult pair(JSONArray args){
         	PluginResult result = null;
         	try {
                  String addressDevice = args.getString(0);
@@ -350,15 +360,24 @@ public class BluetoothConnection extends CordovaPlugin {
         
         
         public PluginResult connect(JSONArray args){
+        	
         	PluginResult result = null;
         	String macAddress;
             
-                    //macAddress = args.getString(0);
-            		macAddress = "EC:55:F9:EE:16:75";
-                    BluetoothDevice device = mBtAdapter.getRemoteDevice(macAddress);
-                    mConnectionHandler.connect(device, false);
+                    try {
+                    	
+						macAddress = args.getString(0);
+						Log.i(TAG, "connect to ..."+macAddress);
+						BluetoothDevice device = mBtAdapter.getRemoteDevice(macAddress);
+	                    mConnectionHandler.connect(device, false);
+	                    
+	                    result = new PluginResult(PluginResult.Status.OK, true);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            		
                     
-                    result = new PluginResult(PluginResult.Status.OK, true);
            
             return result;
         }
@@ -392,6 +411,12 @@ public class BluetoothConnection extends CordovaPlugin {
         
         
         
+        public void obd2Wrapper(JSONArray args, CallbackContext callbackContext){
+        	
+        }
+        
+        
+        
 
         public void setDiscovering(boolean state) {
                 mIsDiscovering = state;
@@ -413,6 +438,9 @@ public class BluetoothConnection extends CordovaPlugin {
         		try {
 					jDevice.put("name", device.getName());
 					jDevice.put("address", device.getAddress());
+					Log.i(TAG, device.getName()+"NAME");
+					result.put(jDevice);
+					
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -443,39 +471,15 @@ public class BluetoothConnection extends CordovaPlugin {
 
                                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                                 Log.i(TAG, "Device found " + device.getName() + " "+ device.getBondState() + " " + device.getAddress());
-                                if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                                        Log.i(TAG, "Device not paired");
-                                        addDevice(device);
-                                } else
-                                        Log.i(TAG, "Device already paired");
+                                addDevice(device);
+                                
 
                         } else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                                 Log.i(TAG, "Discovery started");
                                 setDiscovering(true);
                         } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                                Log.i(TAG, "Discovery finilized");
-                                setDiscovering(false);
-                                JSONArray devicesFound = new JSONArray();
-                                for (BluetoothDevice device : mDiscoveredDevices) {
-                                        Log.i(TAG, device.getName() + " " + device.getAddress()+ " " + device.getBondState());
-                                        if ((device.getName() != null) && (device.getBluetoothClass() != null)) {
-                                                JSONObject theDevice = new JSONObject();
-                                                try {
-                                                	theDevice.put("name", device.getName());
-                                                     theDevice.put("address", device.getAddress());
-                                                     theDevice.put("class", device.getBluetoothClass().getDeviceClass());
-                                                     devicesFound.put(theDevice);
-                                                } catch (JSONException e) {
-                                                     Log.e(TAG, e.getMessage(), e);
-                                                }
-                                        } else {
-                                                Log.i(TAG, device.getName()+ " Problems retrieving attributes. Device not added ");
-                                        }
-                                }
-
-                                Log.d("BluetoothPlugin - " + ACTION_DISCOVER_DEVICES, "Returning: " + devicesFound);
-                                PluginResult result = new PluginResult(PluginResult.Status.OK, devicesFound);
-                                mCallbackContext.sendPluginResult(result);
+                        		Log.i(TAG, "Discovery was finished");
+                        		setDiscovering(false);
                         }
                 }
         };
@@ -508,7 +512,12 @@ public class BluetoothConnection extends CordovaPlugin {
                                 byte[] readBuf = (byte[]) msg.obj;
                                 String readMessage = new String(readBuf, 0, msg.arg1);
                                 Log.d(TAG, "MESSAGE_READ: " + readMessage);
-                                //SendToFront(readMessage);
+                                
+                                
+                                
+                                
+                                
+                                
                                 break;
                         case MESSAGE_DEVICE_NAME:
                                 Log.d(TAG, "MESSAGE_DEVICE_NAME");
@@ -520,9 +529,4 @@ public class BluetoothConnection extends CordovaPlugin {
                         }
                 }
         };
-
-        public void SendToFront(String _data) {
-                this.webView.sendJavascript("receiverBT('" + _data + "');");
-        }
-
 }

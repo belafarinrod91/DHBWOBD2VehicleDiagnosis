@@ -6,14 +6,18 @@ cordova.define("org.obd2.bluetooth.BluetoothConnection", function(require, expor
 	
 	isBTEnabled: function(success, failure){cordova.exec(success, failure, "BluetoothConnection", "isBTEnabled", []);},
 	
-	discoverDevices : function(success, failure){cordova.exec(success, failure, "BluetoothConnection", "discoverDevices", []);},
+	discoverDevices : function(success, failure){
+		return cordova.exec(success, failure, "BluetoothConnection", "discoverDevices", []);},
 
-	stopDiscover: function(success,failure) {
-		return cordova.exec(success, failure, "BluetoothConnection", "stopDiscover", []);},
-		
+	stopDiscover: function(success,failure) {cordova.exec(success, failure, "BluetoothConnection", "stopDiscover", []);},
+	
 	pair : function (macAddress, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "pair", [macAddress]);},
 	
 	unpair : function (macAddress, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "pair", [macAddress]);},
+	
+	isBound : function (macAddress, success, failure) {
+		return cordova.exec(success, failure, "BluetoothConnection", "isBound", [macAddress]);},
+	
 	
 	listBoundDevices : function (success, failure) {cordova.exec(success, failure, "BluetoothConnection", "listBoundDevices", []);},
 

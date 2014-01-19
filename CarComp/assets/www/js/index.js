@@ -60,50 +60,66 @@ var app = {
     },
     
     discoverDevices : function(){
-    	bConnection.discoverDevices();
+    	var devices = "";
+    		
+            console.log("DISCOVERING ENDED");
+            bConnection.discoverDevices(
+             function(r) {
+                     console.log(JSON.stringify(r));
+                     var devices = r;
+                    
+                     //clearing device list
+                     document.getElementById("devices").innerHTML = '';
+                    
+                     //adding new elements to device list
+                     for(d in devices) {
+                             appendListElement(devices[d].name, devices[d].address, "devices");
+                     }
+                    
+                     //setting message displayed to the user
+                     if(document.getElementById("devices").getElementsByTagName("li").length){
+                             document.getElementById("titleDevicesPopup").innerHTML="Please select a device to connect to.";
+                     }
+                     else {
+                             document.getElementById("titleDevicesPopup").innerHTML="No Device was found !";
+                     }
+                     
+                    },
+                    
+             function(e) {
+             console.log("failure");
+             }
+            
+            );
+    	  
     },
     
     stopDiscover : function(){
-    	var devices = "";
-    	console.log("DISCOVERING ENDED");
-    	bConnection.stopDiscover(
-    	   function(r) { 
-    		   console.log(JSON.stringify(r));
-    		   var devices = r;
-    		   
-    		   //clearing device list
-    		   document.getElementById("devices").innerHTML = '';
-    		   
-    		   //adding new elements to device list
-    		   for(d in devices) {
-    			   appendListElement(devices[d].name, devices[d].adress, "devices");
-    		   }
-    		   
-    		   //setting message displayed to the user
-    		   if(document.getElementById("devices").getElementsByTagName("li").length){
-    			   document.getElementById("titleDevicesPopup").innerHTML="Please select a device to connect to.";
-    		   }
-    		   else {
-    			   document.getElementById("titleDevicesPopup").innerHTML="No Device was found !";
-    		   }
-    		},
-    	    function(e) { 
-    	        console.log("failure");
-    	    }
-    	    
-    	);
+    	bConnection.stopDiscover();
     },
-    
+   
     connect : function(address) {
         bConnection.connect(address);
     },
     
-    pair : function(macAdress){
-    	bConnection.pair(macAdress);
+    pair : function(macAddress){
+    	bConnection.pair(macAddress);
     },
     
-    unpair : function(macAdress){
-    	bConnection.unpair(macAdress);
+    unpair : function(macAddress){
+    	bConnection.unpair(macAddress);
+    },
+    
+    isBound : function(macAddress){
+    	bConnection.isBound(macAddress, 
+    		function(r){
+    			alert('Device is already bounded. We will connect you !');
+    			app.connect(macAddress);
+    		},
+    		function(e){
+    			alert('You never seen this device before, we will pair you ...');
+    			app.pair(macAddress);
+    		});
     },
     
     listBoundDevices : function(){
@@ -114,6 +130,12 @@ var app = {
     	bConnection.writeMessage(message);
     }
 };
+
+
+
+
+
+
 
 //customized android backbutton
 document.addEventListener("backbutton", function(){

@@ -30,25 +30,24 @@ require([
 		//displaying a progress indicator and its dialog
 		var prog;
 		show_progress_indicator = function(dlg,cont){
-			dom.byId("titleDevicesPopup").innerHTML="Please wait for 5 seconds.";
+			dom.byId("titleDevicesPopup").innerHTML="Please wait ...";
 			show(dlg);
 			var container = dom.byId(cont);
 			prog = ProgressIndicator.getInstance();
 			container.appendChild(prog.domNode);
 			prog.start();
 			app.discoverDevices();
-			setTimeout(function(){
-				app.stopDiscover();
-				//just for testing:
-				//appendListElement("moin", "mohoin", "devices");
-				prog.stop();
-			}, 5000);
+			hide_progress_indicator_only();
 		}
 		
 		//hiding a progress indicator and its dialog
 		hide_progress_indicator = function(dlg){
 			prog.stop();
 			hide(dlg);
+		}
+		
+		hide_progress_indicator_only = function(){
+			prog.stop();
 		}
 		
 		
@@ -61,7 +60,7 @@ require([
 	             onClick : function() {
 	            	hide_progress_indicator("devicesPopup");
 	            	dom.byId("btConnectionStatus").innerHTML="connecting to : "+name+" ...";
-	             	if(app.pair(address)){
+	             	if(app.connect(address)){
 	             		dom.byId("btConnectionStatus").innerHTML="Is connected to : "+name+" !";
 	             	}else{
 	             		dom.byId("btConnectionStatus").innerHTML="Connection Error.";

@@ -36,8 +36,10 @@ require([
 			prog = ProgressIndicator.getInstance();
 			container.appendChild(prog.domNode);
 			prog.start();
-			app.discoverDevices();
-			hide_progress_indicator_only();
+			setTimeout(function(){
+				app.discoverDevices();
+				hide_progress_indicator_only();
+			}, 1000);
 		}
 		
 		//hiding a progress indicator and its dialog

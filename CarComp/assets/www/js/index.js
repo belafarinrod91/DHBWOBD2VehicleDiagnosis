@@ -62,7 +62,6 @@ var app = {
     discoverDevices : function(){
     	var devices = "";
     		
-            console.log("DISCOVERING ENDED");
             bConnection.discoverDevices(
              function(r) {
                      console.log(JSON.stringify(r));
@@ -84,14 +83,15 @@ var app = {
                              document.getElementById("titleDevicesPopup").innerHTML="No Device was found !";
                      }
                      
-                    },
+             },
                     
              function(e) {
              console.log("failure");
              }
+    	
             
             );
-    	  
+            console.log("DISCOVERING ENDED");
     },
     
     stopDiscover : function(){

@@ -73,7 +73,7 @@ require([
 	         list.addChild(childWidget);
 		}
 		
-		var gaugeSize=Math.min(dojo.window.getBox().h/3, dojo.window.getBox().w/2);
+		var gaugeSize=Math.min((dojo.window.getBox().h-dom.byId("displayGaugesHeading").offsetHeight)/3, dojo.window.getBox().w/2);
 		
 		//creating a circular gauge
 		makeGauge = function(gauge, title, id, max, tick){

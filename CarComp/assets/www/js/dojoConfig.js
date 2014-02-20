@@ -14,7 +14,8 @@ require([
 		"dojox/mobile/deviceTheme", 
 		"dojo/domReady!",
 		"dijit/form/Button",
-		"dojox/gauges/GlossyCircularGauge"
+		"dojox/gauges/GlossyCircularGauge",
+		"dojo/window"
 	], function(Moveable, dom, domStyle, registry, ProgressIndicator){
 		
 		//displaying a dialog
@@ -72,23 +73,29 @@ require([
 	         list.addChild(childWidget);
 		}
 		
+		var gaugeSize=Math.min(dojo.window.getBox().h/3, dojo.window.getBox().w/2);
+		
 		//creating a circular gauge
-		var glossyCircular;
-		makeGauge = function(){
-			glossyCircular = new dojox.gauges.GlossyCircularGauge({
+		makeGauge = function(gauge, title, id, max, tick){
+			
+			gauge = new dojox.gauges.GlossyCircularGauge({
 			    background: [255, 255, 255, 0],
 			    value: 0,
-			    title: 'RPM',
-			    id: "rpmGauge",
-			    width: 300,
-			    height: 300,
+			    min: 0,
+			    max: max,
+			    majorTicksInterval: tick,
+			    minorTicksInterval: tick/2,
+			    title: title,
+			    id: id,
+			    width: gaugeSize,
+			    height: gaugeSize,
 			    noChange: true
-			}, dojo.byId("rpmGauge"));
-			glossyCircular.startup();
+			}, dojo.byId(id));
+			gauge.startup();
 		    	
 			setInterval(function() {
 			    var randomValue = Math.floor((Math.random() * 100) + 1);
-		        glossyCircular.set("value", randomValue);
+		        gauge.set("value", randomValue);
 		    }, 3000);
 		};
 		
@@ -98,6 +105,11 @@ require([
 		makeMoveable= function(){
 			if(!isCustomizeable){
 				dnd = new Moveable(dom.byId("rpmGauge"));
+				dnd = new Moveable(dom.byId("speedGauge"));
+				dnd = new Moveable(dom.byId("runTimeGauge"));
+				dnd = new Moveable(dom.byId("oilTempGauge"));
+				dnd = new Moveable(dom.byId("fuelTypeGauge"));
+				dnd = new Moveable(dom.byId("fualRateGauge"));
 				
 				isCustomizeable=true;
 				dom.byId("custButton").innerHTML="Done!";
@@ -121,8 +133,19 @@ require([
 		
 		//this function is called when everything else is loaded
 		dojo.ready(function(){
-			//initialize circular gauge
-			makeGauge();
+			//initialize circular gauges
+			var rpmGauge;
+			makeGauge(rpmGauge, 'RPM', "rpmGauge", 7000, 500);
+			var speedGauge;
+			makeGauge(speedGauge, 'Speed', "speedGauge", 250, 20);
+			var runTimeGauge;
+			makeGauge(runTimeGauge, 'Run Time since Engine Start', "runTimeGauge", 1000, 100);
+			var oilTempGauge;
+			makeGauge(oilTempGauge, 'Oil Temperature', "oilTempGauge", 200, 10);
+			var fuelTypeGauge;
+			makeGauge(fuelTypeGauge, 'Fuel Type', "fuelTypeGauge", 100, 10);
+			var fualRateGauge;
+			makeGauge(fualRateGauge, 'Fuel Rate', "fualRateGauge", 10, 0.5);
 			
 			//configuration for bluetooth on/off-switch
 			if(true){

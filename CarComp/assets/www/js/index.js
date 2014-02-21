@@ -59,20 +59,11 @@ var app = {
     	var enabled;
         bConnection.isBTEnabled(
           function(r){
-        	  if(r == 'true'){
-        		  enabled = true;
-        	  }
-        	  else {
-        		  enabled = false;
-        	  }
-          },
-          
+        	  enabled = r;
+        },
           function(e){
         	  console.log("Failure during calling isBTEnabled");
-          }
-        		
-        
-        );
+        });
         return enabled;
     },
     
@@ -148,15 +139,10 @@ var app = {
     },
     
     getOBD2ConnectionStatus : function(){
-    	var connected = false;
+    	var connected;
     	bConnection.getOBD2ConnectionStatus(
                 function(r) {
-                	if(r == 'true'){
-                		connected = true;
-                	}
-                	else {
-                		connected = false;
-                	}
+                	connected = r;
                 },
                        
                 function(e) {

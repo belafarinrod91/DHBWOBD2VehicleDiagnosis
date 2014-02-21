@@ -116,7 +116,7 @@ var app = {
     },
    
     connect : function(address) {
-        bConnection.connect(address);
+        bConnection.connect(address);  
     },
     
     pair : function(macAddress){

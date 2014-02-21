@@ -63,12 +63,8 @@ require([
 	             onClick : function() {
 	            	hide_progress_indicator("devicesPopup");
 	            	dom.byId("btConnectionStatus").innerHTML="connecting to : "+name+" ...";
-	             	if(app.connect(address)){
-	             		dom.byId("btConnectionStatus").innerHTML="Is connected to : "+name+" !";
-	             	}else{
-	             		dom.byId("btConnectionStatus").innerHTML="Connection Error.";
-	             	}
-	             }
+	             	app.connect(address);
+	            }
 	         });
 	         list.addChild(childWidget);
 		}

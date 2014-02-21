@@ -505,6 +505,10 @@ public class BluetoothConnection extends CordovaPlugin {
                         }
                 }
         };
+        
+        public void updateConnectionStatus(String statement){
+        	this.webView.sendJavascript("dom.byId('btConnectionStatus').innerHTML='"+statement+"';");
+        }
 
         private final Handler mHandler = new Handler() {
                 @Override
@@ -514,15 +518,19 @@ public class BluetoothConnection extends CordovaPlugin {
                                 switch (msg.arg1) {
                                 case ConnectionHandler.STATE_CONNECTED:
                                         Log.d(TAG, "Handler - BluetoothChatService.STATE_CONNECTED");
+                                        updateConnectionStatus("Connected.");
                                         break;
                                 case ConnectionHandler.STATE_CONNECTING:
                                         Log.d(TAG,"Handler - BluetoothChatService.STATE_CONNECTING");
+                                        updateConnectionStatus("Connecting ... ");
                                         break;
                                 case ConnectionHandler.STATE_LISTEN:
                                 		Log.d(TAG,"Handler - BluetoothChatService.STATE_LISTEN");
+                                		updateConnectionStatus("Listen ... ");
                                 		break;
                                 case ConnectionHandler.STATE_NONE:
                                         Log.d(TAG, "Handler - BluetoothChatService.STATE_NONE");
+                                        updateConnectionStatus("Nothing to do / Connection Error");
                                         break;
                                 }
                                 break;

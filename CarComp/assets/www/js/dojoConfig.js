@@ -148,7 +148,7 @@ require([
 			makeGauge(fualRateGauge, 'Fuel Rate', "fualRateGauge", 10, 0.5);
 			
 			//configuration for bluetooth on/off-switch
-			if(true){
+			if(app.isBTEnabled()){
 				registry.byId("bluetoothSwitch").set("value", "on");
 			}else{
 				registry.byId("bluetoothSwitch").set("value", "off");
@@ -156,9 +156,12 @@ require([
 			
 			dojo.connect(registry.byId("bluetoothSwitch"), "onStateChanged", function(newState){
 		 	   if(newState=="on"){
-		 		  app.enable();
-		 	   }else{
-		 		  alert("bluetooth should be disabled here!");
+		 		  app.enableBT();
+		 	   }else if (newState == "off"){
+		 		  app.disableBT();
+		 	   }
+		 	   else {
+		 		  alert("There went something wrong, calling the new state of BluetoothIndicator");
 		 	   }
 			});
 		});

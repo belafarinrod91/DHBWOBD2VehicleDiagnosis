@@ -4,7 +4,8 @@ cordova.define("org.obd2.bluetooth.BluetoothConnection", function(require, expor
 	
 	disableBT: function(success, failure){cordova.exec(success, failure, "BluetoothConnection", "disableBT", []);},
 	
-	isBTEnabled: function(success, failure){cordova.exec(success, failure, "BluetoothConnection", "isBTEnabled", []);},
+	isBTEnabled: function(success, failure){
+		return cordova.exec(success, failure, "BluetoothConnection", "isBTEnabled", []);},
 	
 	discoverDevices : function(success, failure){
 		return cordova.exec(success, failure, "BluetoothConnection", "discoverDevices", []);},

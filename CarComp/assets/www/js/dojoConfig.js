@@ -144,11 +144,9 @@ require([
 			makeGauge(fualRateGauge, 'Fuel Rate', "fualRateGauge", 10, 0.5);
 			
 			
-			var isEnabled = app.isBTEnabled();
-			console.log('Heeeee '+isEnabled);
+			
 			//configuration for bluetooth on/off-switch
 			if(app.isBTEnabled()){
-				
 				registry.byId("bluetoothSwitch").set("value", "on");
 			}else{
 				registry.byId("bluetoothSwitch").set("value", "off");

@@ -48,6 +48,7 @@ public class BluetoothConnection extends CordovaPlugin {
         public static final String ACTION_IS_BOUND_BT = "isBound";
         public static final String ACTION_WRITE_MESSAGE = "writeMessage";
         public static final String ACTION_OBD2_DATA_WRAPPER = "obd2Wrapper";
+        public static final String ACTION_OBD2_CONNECTION_STATUS = "getOBD2ConnectionStatus";
         
         //MemberVariables
         private static BluetoothAdapter mBtAdapter;
@@ -139,7 +140,12 @@ public class BluetoothConnection extends CordovaPlugin {
                 } else if (ACTION_OBD2_DATA_WRAPPER.equals(action)){
                 	obd2Wrapper(args, callbackContext);
                 	
-                } else {
+                } else if (ACTION_OBD2_CONNECTION_STATUS.equals(action)){
+                	result = getOBD2ConnectionStatus(callbackContext);
+                }
+                
+                
+                else {
                         result = new PluginResult(PluginResult.Status.INVALID_ACTION);
                         Log.d(TAG, "Invalid action : " + action + " passed");
                 }
@@ -415,6 +421,22 @@ public class BluetoothConnection extends CordovaPlugin {
         	
         }
         
+        public PluginResult getOBD2ConnectionStatus(CallbackContext callbackContext){
+        	PluginResult result = null;
+        	boolean obd2connected = false;
+        	
+        	if(mConnectionHandler.getState() == ConnectionHandler.STATE_CONNECTED){
+        		obd2connected = true;
+        	}
+        	else {
+        		obd2connected = false;
+        	}
+        	
+        	result = new PluginResult(PluginResult.Status.OK, obd2connected);
+            result.setKeepCallback(true);
+            callbackContext.sendPluginResult(result);
+        	return result;
+        }
         
         
 

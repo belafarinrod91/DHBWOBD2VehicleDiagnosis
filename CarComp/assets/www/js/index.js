@@ -128,6 +128,24 @@ var app = {
     
     writeMessage : function(message){
     	bConnection.writeMessage(message);
+    },
+    
+    getOBD2ConnectionStatus : function(){
+    	var connected = false;
+    	bConnection.getOBD2ConnectionStatus(
+                function(r) {
+                	if(r == 'true'){
+                		connected = true;
+                	}
+                	else {
+                		connected = false;
+                	}
+                },
+                       
+                function(e) {
+                	console.log("error during calling 'getOBD2ConnectionStatus'")
+                });
+        return connected; 
     }
 };
 

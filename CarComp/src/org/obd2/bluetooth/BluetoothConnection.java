@@ -7,6 +7,8 @@ package org.obd2.bluetooth;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.cordova.CallbackContext;
@@ -17,6 +19,7 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import android.net.ConnectivityManager;
 import android.os.Handler;
 import android.os.Message;
@@ -58,6 +61,9 @@ public class BluetoothConnection extends CordovaPlugin {
         private ArrayList<BluetoothDevice> mDiscoveredDevices;
         private JSONArray mJSONDiscoveredDevices;
         
+        private List<String> mResultsOfOBD2Values;
+        private boolean mUseListToSendCodes;
+        
         
         private CallbackContext mCallbackContext;
         
@@ -92,6 +98,7 @@ public class BluetoothConnection extends CordovaPlugin {
                 context.registerReceiver(mReceiver, filter);
 
                 mConnectionHandler = new ConnectionHandler(context, mHandler);
+                OBD2Library.initializeLib();
         }
 
         @Override
@@ -138,7 +145,12 @@ public class BluetoothConnection extends CordovaPlugin {
                 } else if (ACTION_CONNECT.equals(action)) {
                 	result = connect(args);
                 } else if (ACTION_OBD2_DATA_WRAPPER.equals(action)){
-                	obd2Wrapper(args, callbackContext);
+                	try {
+						getOBD2Values(args, callbackContext);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
                 	
                 } else if (ACTION_OBD2_CONNECTION_STATUS.equals(action)){
                 	result = getOBD2ConnectionStatus(callbackContext);
@@ -415,10 +427,50 @@ public class BluetoothConnection extends CordovaPlugin {
         	return result;
         }
         
-        
-        
-        public void obd2Wrapper(JSONArray args, CallbackContext callbackContext){
+        private void writeMessage(String msg){
+        	msg = msg+'\r';
         	
+        	if(mConnectionHandler.getState() != ConnectionHandler.STATE_CONNECTED){
+        		Log.d(TAG, "Can't send, not connected");
+        	}
+        	
+        	if(msg.length() > 0){
+        		byte[] send = msg.getBytes();
+        		mConnectionHandler.write(send);
+                Log.d(TAG, "Returning "+ "Result: " + send);
+        	}
+        	else {
+        		Log.d(TAG, "Nothind to send here.");
+        	}
+        	
+        }
+        
+        
+        
+        public void getOBD2Values(JSONArray args, CallbackContext callbackContext) throws JSONException{
+        	PluginResult result = null;
+        	mUseListToSendCodes = true;
+        	JSONArray resultJSONArray = new JSONArray();
+        	
+        	for(int i = 0; i < args.length(); i++){
+        		JSONObject item = args.getJSONObject(i);
+        	    String tmpVal = item.getString("value");
+        	    String val = OBD2Library.getCodeForName(tmpVal);
+        	    
+        	    writeMessage("01"+val);
+        	}
+        	
+        	if(mResultsOfOBD2Values.size() > 0){
+        		for(String s : mResultsOfOBD2Values){
+        			JSONObject obj = OBD2Library.returnResultObject(s);
+        			resultJSONArray.put(obj);
+        		}
+        	}
+        	
+        	mUseListToSendCodes = false;
+        	result = new PluginResult(PluginResult.Status.OK, resultJSONArray);
+            result.setKeepCallback(true);
+            callbackContext.sendPluginResult(result);
         }
         
         public PluginResult getOBD2ConnectionStatus(CallbackContext callbackContext){
@@ -541,13 +593,16 @@ public class BluetoothConnection extends CordovaPlugin {
                         case MESSAGE_READ:
                                 byte[] readBuf = (byte[]) msg.obj;
                                 String readMessage = new String(readBuf, 0, msg.arg1);
-                                Log.d(TAG, "MESSAGE_READ: " + readMessage);
-                                
-                                
-                                
-                                
-                                
-                                
+                                if(mUseListToSendCodes){
+                                	Log.d(TAG, "MESSAGE_READ: " + readMessage);
+                                	if(readMessage.length() >= 2){
+                                		mResultsOfOBD2Values.add(readMessage);
+                                	}
+                                }
+                                else {
+                                	Log.d(TAG, "MESSAGE_READ: " + readMessage);
+                                }
+                                 
                                 break;
                         case MESSAGE_DEVICE_NAME:
                                 Log.d(TAG, "MESSAGE_DEVICE_NAME");

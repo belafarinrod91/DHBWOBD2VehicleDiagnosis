@@ -149,14 +149,18 @@ var app = {
                 	console.log("error during calling 'getOBD2ConnectionStatus'")
                 });
         return connected; 
-    }
+    },
+    
+    getOBD2Values : function(){
+    	bConnection.getOBD2Values(
+    			function(r){
+    				console.log(r);
+    			},
+    			function(e){
+    				console.log("error during calling 'getOBD2Values'")
+    			});
+    	}
 };
-
-
-
-
-
-
 
 //customized android backbutton
 document.addEventListener("backbutton", function(){

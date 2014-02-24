@@ -121,41 +121,38 @@
 			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide('displayPopup')">Back</button>
 			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton" onclick="addProperties()">Add</button>
 		</div>
-		
 	</div>
+	
 	<div id="displayGauges" data-dojo-type="dojox.mobile.View">
 		<h1 id="displayGaugesHeading" data-dojo-type="dojox.mobile.Heading" data-dojo-props="back:'Home', moveTo:'home'">
-			Display Gauges
-			<div id="custButton" data-dojo-type="dojox.mobile.ToolBarButton" style="float:right;" onClick="makeMoveable()">
-				Customize
-			</div>
+			Gauges
+				<span id="custButton" data-dojo-type="dojox.mobile.ToolBarButton" style="float:right;" onClick="makeMoveable()">
+					Customize
+				</span>
+				<span id="addGaugeButton" data-dojo-type="dojox.mobile.ToolBarButton" style="visibility:hidden; float:right;" onClick="show('addGaugePopup')">
+					Add
+				</span>
 		</h1>
-		<table>
-			<tr>
-				<td>
-					<div id="rpmGauge"></div>
-				</td>
-				<td>
-					<div id="speedGauge"></div>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<div id="runTimeGauge"></div>
-				</td>
-				<td>
-					<div id="oilTempGauge"></div>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<div id="fuelTypeGauge"></div>
-				</td>
-				<td>
-					<div id="fualRateGauge"></div>
-				</td>
-			</tr>
-		</table>	
+		<div id="gauges">
+			<!--<div id="rpmGauge"></div>
+			<div id="speedGauge"></div>
+			<div id="runTimeGauge"></div>
+			<div id="oilTempGauge"></div>
+			<div id="fuelTypeGauge"></div>
+			<div id="fualRateGauge"></div>-->
+		</div>
+		<div id="addGaugePopup" data-dojo-type="dojox.mobile.SimpleDialog">
+			<div id="titleAddGaugePopup" class="mblSimpleDialogText">Please select a gauge to add.</div>
+			<ul id="ListAddgauges" data-dojo-type="dojox.mobile.RoundRectList">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Engine RPM', clickable : true" onClick="addGauge('rpmGauge'); hide('addGaugePopup');"/>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Speed', clickable : true" onClick="addGauge('speedGauge'); hide('addGaugePopup');"/>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Run Time', clickable : true" onClick="addGauge('runTimeGauge'); hide('addGaugePopup');"/>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Oil Temperature', clickable : true" onClick="addGauge('oilTempGauge'); hide('addGaugePopup');"/>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Fuel Type', clickable : true" onClick="addGauge('fuelTypeGauge'); hide('addGaugePopup');"/>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Fuel Rate', clickable : true" onClick="addGauge('fuelRateGauge'); hide('addGaugePopup');"/>
+			</ul>
+			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide('addGaugePopup')">Cancel</button>
+		</div>	
 	</div>
        
 	<!-- loading Overlay -->

@@ -15,7 +15,8 @@ require([
 		"dojo/domReady!",
 		"dijit/form/Button",
 		"dojox/gauges/GlossyCircularGauge",
-		"dojo/window"
+		"dojo/window",
+		"dojo/query"
 	], function(Moveable, dom, domStyle, registry, ProgressIndicator){
 		
 		//displaying a dialog
@@ -75,6 +76,25 @@ require([
 		
 		var gaugeSize=Math.min((dojo.window.getBox().h-dom.byId("displayGaugesHeading").offsetHeight)/3, dojo.window.getBox().w/2);
 		
+		addGauge=function(gaugeName){
+			dom.byId("gauges").innerHTML+="<div id='"+gaugeName+"' align='center' style='width:"+gaugeSize+"px; height:"+gaugeSize+"px; background:grey;' onClick='customizeDiv("+gaugeName+")'>"
+			+gaugeName
+			+"</div>";
+		};
+		
+		var dnd;
+		customizeDiv = function(div){
+			if(registry.byId(div).className != "selectedDiv"){
+				selectedDivs=dojo.query(".selectedDiv");
+				if(selectedDivs.length>0){
+					selectedDivs[0].className = "";
+					dnd.destroy();
+				}
+				registry.byId(div).className = "selectedDiv";
+				dnd = new Moveable(dom.byId(div));
+			}
+		}
+		
 		//creating a circular gauge
 		makeGauge = function(gauge, title, id, max, tick){
 			
@@ -101,22 +121,24 @@ require([
 		
 		//customize functionality of "display gauges"
 		isCustomizeable=false;
-		var dnd;
+		//var dnd;
 		makeMoveable= function(){
 			if(!isCustomizeable){
-				dnd = new Moveable(dom.byId("rpmGauge"));
+				/*dnd = new Moveable(dom.byId("rpmGauge"));
 				dnd = new Moveable(dom.byId("speedGauge"));
 				dnd = new Moveable(dom.byId("runTimeGauge"));
 				dnd = new Moveable(dom.byId("oilTempGauge"));
 				dnd = new Moveable(dom.byId("fuelTypeGauge"));
-				dnd = new Moveable(dom.byId("fualRateGauge"));
+				dnd = new Moveable(dom.byId("fualRateGauge"));*/
 				
 				isCustomizeable=true;
+				registry.byId("addGaugeButton").set("style", "visibility:visible");
 				dom.byId("custButton").innerHTML="Done!";
 			}else{
-				dnd.destroy();
+				//dnd.destroy();
 				
 				isCustomizeable=false;
+				registry.byId("addGaugeButton").set("style", "visibility:hidden");
 				dom.byId("custButton").innerHTML="Customize";
 			}
 		}
@@ -134,7 +156,7 @@ require([
 		//this function is called when everything else is loaded
 		dojo.ready(function(){
 			//initialize circular gauges
-			var rpmGauge;
+			/*var rpmGauge;
 			makeGauge(rpmGauge, 'RPM', "rpmGauge", 7000, 500);
 			var speedGauge;
 			makeGauge(speedGauge, 'Speed', "speedGauge", 250, 20);
@@ -145,7 +167,7 @@ require([
 			var fuelTypeGauge;
 			makeGauge(fuelTypeGauge, 'Fuel Type', "fuelTypeGauge", 100, 10);
 			var fualRateGauge;
-			makeGauge(fualRateGauge, 'Fuel Rate', "fualRateGauge", 10, 0.5);
+			makeGauge(fualRateGauge, 'Fuel Rate', "fualRateGauge", 10, 0.5);*/
 			
 			//configuration for bluetooth on/off-switch
 			if(true){

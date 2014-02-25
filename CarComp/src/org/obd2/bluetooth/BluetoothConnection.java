@@ -113,7 +113,7 @@ public class BluetoothConnection extends CordovaPlugin {
                 mDiscoveredDevices = new ArrayList<BluetoothDevice>();
 
                 if (ACTION_DISCOVER_DEVICES.equals(action)) {
-                	result = discoverDevices(callbackContext);
+                	discoverDevices(callbackContext);
                 	
                 } else if (ACTION_IS_BT_ENABLED.equals(action)) {
                     result = isEnabled();
@@ -205,32 +205,44 @@ public class BluetoothConnection extends CordovaPlugin {
         	 return result;
         }
         
-        public PluginResult discoverDevices(CallbackContext callbackContext){
-        	PluginResult result = null;
-        	try {
-        		 mDiscoveredDevices.clear();
-                 setDiscovering(true);
-                 
-                 if (mBtAdapter.isDiscovering()) {
-                         mBtAdapter.cancelDiscovery();
-                 }
-                 mBtAdapter.startDiscovery();
+        public void discoverDevices(final CallbackContext callbackContext){
+        	
+        	this.cordova.getThreadPool().execute(new Runnable() {
+				
+				@Override
+				public void run() {
+					PluginResult result = null;
+		        	try {
+		        		mDiscoveredDevices.clear();
+				        setDiscovering(true);
+				                 
+				        if (mBtAdapter.isDiscovering()) {
+				        	mBtAdapter.cancelDiscovery();
+				        }
+				        mBtAdapter.startDiscovery();
 
-                 while(mIsDiscovering){}
-                 
-                 
-                 mJSONDiscoveredDevices = createJSONArrayOfDiscoveredDevices();
-                 
-                 
-                 result = new PluginResult(PluginResult.Status.OK, mJSONDiscoveredDevices);
-                 result.setKeepCallback(true);
-                 callbackContext.sendPluginResult(result);
-        	} catch (Exception Ex) {
-                 Log.d("BluetoothPlugin - " + ACTION_DISCOVER_DEVICES, "Got Exception " + Ex.getMessage());
-                 result = new PluginResult(PluginResult.Status.ERROR);
-        	}
-        	return result;
+				        while(mIsDiscovering){}
+				                 
+				        mJSONDiscoveredDevices = createJSONArrayOfDiscoveredDevices();
+				                 
+				        result = new PluginResult(PluginResult.Status.OK, mJSONDiscoveredDevices);
+				        result.setKeepCallback(true);
+				        callbackContext.sendPluginResult(result);
+					}
+						
+		        	catch (Exception Ex) {
+		                 Log.d("BluetoothPlugin - " + ACTION_DISCOVER_DEVICES, "Got Exception " + Ex.getMessage());
+		                 result = new PluginResult(PluginResult.Status.ERROR);
+		        	}
+		        	
+					
+				}
+			});
+        	
+        	
         }
+        
+        
         
         public PluginResult stopDiscover(){
         	PluginResult result = null;

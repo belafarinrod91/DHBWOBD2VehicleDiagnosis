@@ -90,7 +90,7 @@ var app = {
                      else {
                              document.getElementById("titleDevicesPopup").innerHTML="No Device was found !";
                      }
-                     
+                     hide_progress_indicator_only(); 
              },
                     
              function(e) {

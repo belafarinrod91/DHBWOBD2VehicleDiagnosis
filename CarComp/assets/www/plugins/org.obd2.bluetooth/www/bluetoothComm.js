@@ -4,7 +4,8 @@ cordova.define("org.obd2.bluetooth.BluetoothConnection", function(require, expor
 	
 	disableBT: function(success, failure){cordova.exec(success, failure, "BluetoothConnection", "disableBT", []);},
 	
-	isBTEnabled: function(success, failure){cordova.exec(success, failure, "BluetoothConnection", "isBTEnabled", []);},
+	isBTEnabled: function(success, failure){
+		return cordova.exec(success, failure, "BluetoothConnection", "isBTEnabled", []);},
 	
 	discoverDevices : function(success, failure){
 		return cordova.exec(success, failure, "BluetoothConnection", "discoverDevices", []);},
@@ -18,12 +19,16 @@ cordova.define("org.obd2.bluetooth.BluetoothConnection", function(require, expor
 	isBound : function (macAddress, success, failure) {
 		return cordova.exec(success, failure, "BluetoothConnection", "isBound", [macAddress]);},
 	
-	
 	listBoundDevices : function (success, failure) {cordova.exec(success, failure, "BluetoothConnection", "listBoundDevices", []);},
 
 	connect: function(address, success, failure){cordova.exec(success, failure, "BluetoothConnection", "connect", [address]);},
 	
-	writeMessage : function (message, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "writeMessage", [message]);}
+	writeMessage : function (message, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "writeMessage", [message]);},
 	
+	getOBD2ConnectionStatus : function (message, success, failure) {
+		return cordova.exec(success, failure, "BluetoothConnection", "getOBD2ConnectionStatus", []);},
+		
+	getOBD2Values : function (message, success, failure) {
+		return cordova.exec(success, failure, "BluetoothConnection", "getOBD2Values", []);}	
 	}
 module.exports = bConnection;});

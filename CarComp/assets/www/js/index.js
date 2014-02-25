@@ -56,7 +56,15 @@ var app = {
     },
     
     isBTEnabled : function() {
-        bConnection.isBTEnabled();
+    	var enabled;
+        bConnection.isBTEnabled(
+          function(r){
+        	  enabled = r;
+        },
+          function(e){
+        	  console.log("Failure during calling isBTEnabled");
+        });
+        return enabled;
     },
     
     discoverDevices : function(){
@@ -99,7 +107,7 @@ var app = {
     },
    
     connect : function(address) {
-        bConnection.connect(address);
+        bConnection.connect(address);  
     },
     
     pair : function(macAddress){
@@ -128,14 +136,31 @@ var app = {
     
     writeMessage : function(message){
     	bConnection.writeMessage(message);
-    }
+    },
+    
+    getOBD2ConnectionStatus : function(){
+    	var connected;
+    	bConnection.getOBD2ConnectionStatus(
+                function(r) {
+                	connected = r;
+                },
+                       
+                function(e) {
+                	console.log("error during calling 'getOBD2ConnectionStatus'")
+                });
+        return connected; 
+    },
+    
+    getOBD2Values : function(){
+    	bConnection.getOBD2Values(
+    			function(r){
+    				console.log(r);
+    			},
+    			function(e){
+    				console.log("error during calling 'getOBD2Values'")
+    			});
+    	}
 };
-
-
-
-
-
-
 
 //customized android backbutton
 document.addEventListener("backbutton", function(){
@@ -143,17 +168,15 @@ document.addEventListener("backbutton", function(){
 }, false);
 
 
+function dummyJSON(json){
+	var result = [{"engineRPM":"12"}, {"speed":"13"}, {"runtime":"14"}, {"oilTemperature":"15"}, {"fuelType":"gas or diesel... dunno"}, {"fuelRate":"17"}];
+	return result;
+}
+
 //just generates random values atm... Here a function should be called receiving the actual values from the bt-adapter.
 function refreshValues(){
-	var randomValues = new Array();
-	randomValues[0] = Math.floor((Math.random() * 100) + 1);
-	randomValues[1] = Math.floor((Math.random() * 100) + 1);
-	randomValues[2] = Math.floor((Math.random() * 100) + 1);
-	randomValues[3] = Math.floor((Math.random() * 100) + 1);
-	randomValues[4] = "gasoline E"+Math.floor((Math.random() * 100) + 1);
-	randomValues[5] = Math.floor((Math.random() * 100) + 1);
-	
-	setDisplayValues(randomValues);
+	var request=[{"value":"engineRPM"}, {"value":"speed"}, {"value":"runtime"}, {"value":"oilTemperature"}, {"value":"fuelType"}, {"value":"fuelRate"}];
+	setDisplayValues(dummyJSON(request));
 }
 
 

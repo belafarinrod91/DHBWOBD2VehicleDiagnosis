@@ -64,12 +64,8 @@ require([
 	             onClick : function() {
 	            	hide_progress_indicator("devicesPopup");
 	            	dom.byId("btConnectionStatus").innerHTML="connecting to : "+name+" ...";
-	             	if(app.connect(address)){
-	             		dom.byId("btConnectionStatus").innerHTML="Is connected to : "+name+" !";
-	             	}else{
-	             		dom.byId("btConnectionStatus").innerHTML="Connection Error.";
-	             	}
-	             }
+	             	app.connect(address);
+	            }
 	         });
 	         list.addChild(childWidget);
 		}
@@ -145,12 +141,12 @@ require([
 		
 		//this function takes an array of 6 elements and uses it to update the labels of the display list
 		setDisplayValues=function(values){
-			registry.byId("display_rpm").set("rightText", values[0]);
-			registry.byId("display_speed").set("rightText", values[1]);
-			registry.byId("display_runTime").set("rightText", values[2]);
-			registry.byId("display_oilTemp").set("rightText", values[3]);
-			registry.byId("display_fuelType").set("rightText", values[4]);
-			registry.byId("display_fuelRate").set("rightText", values[5]);
+			var response = values;
+			response.forEach(function(item) {
+				for (key in item){
+					registry.byId("display_"+key).set("rightText", item[key]);
+				}
+			});
 		}
 		
 		//this function is called when everything else is loaded
@@ -169,8 +165,10 @@ require([
 			var fualRateGauge;
 			makeGauge(fualRateGauge, 'Fuel Rate', "fualRateGauge", 10, 0.5);*/
 			
+			
+			
 			//configuration for bluetooth on/off-switch
-			if(true){
+			if(app.isBTEnabled()){
 				registry.byId("bluetoothSwitch").set("value", "on");
 			}else{
 				registry.byId("bluetoothSwitch").set("value", "off");
@@ -178,9 +176,12 @@ require([
 			
 			dojo.connect(registry.byId("bluetoothSwitch"), "onStateChanged", function(newState){
 		 	   if(newState=="on"){
-		 		  app.enable();
-		 	   }else{
-		 		  alert("bluetooth should be disabled here!");
+		 		  app.enableBT();
+		 	   }else if (newState == "off"){
+		 		  app.disableBT();
+		 	   }
+		 	   else {
+		 		  alert("There went something wrong, calling the new state of BluetoothIndicator");
 		 	   }
 			});
 		});

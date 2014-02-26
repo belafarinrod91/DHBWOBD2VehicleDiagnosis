@@ -55,6 +55,9 @@
 			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="moveTo: 'displayGauges'">
 				Display Gauges
 			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="moveTo: 'navigation'">
+				Navigation
+			</li>
 		</ul>
 	</div>
 	
@@ -81,9 +84,6 @@
 			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.isBound('EC:55:F9:EE:16:75')">
 				IS Bound
 			</li>
-			
-			
-			
 		</ul>
 		
 		<div id="devicesPopup" data-dojo-type="dojox.mobile.SimpleDialog">
@@ -154,6 +154,13 @@
 			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide('addGaugePopup')">Cancel</button>
 		</div>	
 	</div>
+	
+	<div id="navigation" data-dojo-type="dojox.mobile.View" style="height:100%; width:100%;">
+		<h1 id="navigation_header" data-dojo-type="dojox.mobile.Heading" data-dojo-props="back:'Home', moveTo:'home'">
+			Navigation
+		</h1>
+		<div id="navigation_map" style="background-color: #b5d0d0; width:100%; height:90%;"></div>
+	</div>
        
 	<!-- loading Overlay -->
 	<div id="loadingOverlay" >
@@ -165,6 +172,7 @@
     <!-- configure and load dojo -->
 	<script type="text/javascript" src="js/dojo-release-1.9.1/dojox/mobile/deviceTheme.js" data-dojo-config="mblThemeFiles: ['base','SimpleDialog','TextBox','Button','Slider']"></script>
 	<script type="text/javascript" src="js/dojo-release-1.9.1/dojo/dojo.js" data-dojo-config="async: true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
 	<script type="text/javascript" src="js/dojoConfig.js"></script>
     </body>
 </html>

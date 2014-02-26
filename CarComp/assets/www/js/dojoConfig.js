@@ -16,7 +16,8 @@ require([
 		"dijit/form/Button",
 		"dojox/gauges/GlossyCircularGauge",
 		"dojo/window",
-		"dojo/query"
+		"dojo/query",
+		"dojox/geo/openlayers/Map"
 	], function(Moveable, dom, domStyle, registry, ProgressIndicator){
 		
 		//displaying a dialog
@@ -38,8 +39,10 @@ require([
 			prog = ProgressIndicator.getInstance();
 			container.appendChild(prog.domNode);
 			prog.start();
-			app.discoverDevices();
-			
+			setTimeout(function(){
+				app.discoverDevices();
+				hide_progress_indicator_only();
+			}, 1000);
 		}
 		
 		//hiding a progress indicator and its dialog
@@ -149,6 +152,11 @@ require([
 		
 		//this function is called when everything else is loaded
 		dojo.ready(function(){
+			
+			//create map
+			map = new dojox.geo.openlayers.Map("navigation_map");
+		    map.fitTo([ -160, 70, 160, -70 ]);
+			
 			//initialize circular gauges
 			/*var rpmGauge;
 			makeGauge(rpmGauge, 'RPM', "rpmGauge", 7000, 500);

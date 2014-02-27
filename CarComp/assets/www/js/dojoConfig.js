@@ -4,6 +4,7 @@ require([
 		"dojo/dom-style",
 		"dijit/registry",
 		"dojox/mobile/ProgressIndicator",
+		"dojo/_base/connect",
 		"dojox/mobile/parser",
 		"dojox/mobile",
 		"dojox/mobile/compat",
@@ -18,7 +19,7 @@ require([
 		"dojo/window",
 		"dojo/query",
 		"dojox/geo/openlayers/Map"
-	], function(Moveable, dom, domStyle, registry, ProgressIndicator){
+	], function(Moveable, dom, domStyle, registry, ProgressIndicator, connect){
 		
 		//displaying a dialog
 		show = function(dlg){
@@ -150,12 +151,20 @@ require([
 			});
 		}
 		
+		renderMap=function(){
+			map = new dojox.geo.openlayers.Map("navigation_map");
+		    map.fitTo([ -160, 70, 160, -70 ]);
+		}
+		
 		//this function is called when everything else is loaded
 		dojo.ready(function(){
 			
-			//create map
-			map = new dojox.geo.openlayers.Map("navigation_map");
-		    map.fitTo([ -160, 70, 160, -70 ]);
+			connect.subscribe("/dojox/mobile/afterTransitionIn",
+				    function(view, moveTo, dir, transition, context, method){
+					  if(moveTo=="navigation"){
+						  renderMap();
+					  }
+			});
 			
 			//initialize circular gauges
 			/*var rpmGauge;
@@ -170,8 +179,6 @@ require([
 			makeGauge(fuelTypeGauge, 'Fuel Type', "fuelTypeGauge", 100, 10);
 			var fualRateGauge;
 			makeGauge(fualRateGauge, 'Fuel Rate', "fualRateGauge", 10, 0.5);*/
-			
-			
 			
 			//configuration for bluetooth on/off-switch
 			if(app.isBTEnabled()){

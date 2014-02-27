@@ -123,7 +123,8 @@
 		</div>
 	</div>
 	
-	<div id="displayGauges" data-dojo-type="dojox.mobile.View">
+	
+	<div id="displayGauges" data-dojo-type="dojox.mobile.View" style="height:100%;">
 		<h1 id="displayGaugesHeading" data-dojo-type="dojox.mobile.Heading" data-dojo-props="back:'Home', moveTo:'home'">
 			Gauges
 				<span id="custButton" data-dojo-type="dojox.mobile.ToolBarButton" style="float:right;" onClick="makeMoveable()">
@@ -152,14 +153,23 @@
 				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Fuel Rate', clickable : true" onClick="addGauge('fuelRateGauge'); hide('addGaugePopup');"/>
 			</ul>
 			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide('addGaugePopup')">Cancel</button>
-		</div>	
+		</div>
+		<h1 id="displayGaugesFooter" data-dojo-type="dojox.mobile.Heading" data-dojo-props="back:'Home', moveTo:'home'" style="position:absolute; bottom: 0px;">
+			Gauges
+			<span data-dojo-type="dojox.mobile.ToolBarButton" style="float:right;" onClick="makeMoveable()">
+				Customize
+			</span>
+			<span data-dojo-type="dojox.mobile.ToolBarButton" style="visibility:hidden; float:right;" onClick="show('addGaugePopup')">
+				Add
+			</span>
+		</h1>	
 	</div>
 	
 	<div id="navigation" data-dojo-type="dojox.mobile.View" style="height:100%; width:100%;">
 		<h1 id="navigation_header" data-dojo-type="dojox.mobile.Heading" data-dojo-props="back:'Home', moveTo:'home'">
 			Navigation
 		</h1>
-		<div id="navigation_map" style="background-color: #b5d0d0; width:100%; height:90%;"></div>
+		<div id="navigation_map" style="background-color: #b5d0d0; width:100%; height:100%; position:absolute; bottom: 0px;"></div>
 	</div>
        
 	<!-- loading Overlay -->

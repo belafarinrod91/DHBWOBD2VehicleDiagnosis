@@ -20,17 +20,17 @@ html, body {
     width: 100%;
     z-index: 1001;
     display: block;
-    background: #fff;
+    background: #000;
 }
 
 #loadingContent{
 	position: absolute;
-	width: 100px;
-	height: 100px;
+	width: 200px;
+	height: 200px;
 	top: 50%;
 	left: 50%;
-	margin-top: -50px;
-	margin-left: -50px;
+	margin-top: -100px;
+	margin-left: -100px;
 }
 
 .selectedDiv{

@@ -43,8 +43,7 @@
     <body>
        	<div id="home" data-dojo-type="dojox.mobile.View" data-dojo-props="selected: true">
 
-		<h1 data-dojo-type="dojox.mobile.Heading">Home</h1>
-				
+		<h1 data-dojo-type="dojox.mobile.Heading">Home</h1>	
 		<ul data-dojo-type="dojox.mobile.RoundRectList">
 			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="moveTo: 'setup'">
 				Setup
@@ -57,6 +56,9 @@
 			</li>
 			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="moveTo: 'navigation'">
 				Navigation
+			</li>
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable:true" onClick="navigator.app.exitApp();">
+				Exit
 			</li>
 		</ul>
 	</div>
@@ -172,10 +174,8 @@
 	</div>
        
 	<!-- loading Overlay -->
-	<div id="loadingOverlay" >
-		<div id="loadingContent">
-			<a>Loading...</a>
-		</div>
+	<div id="loadingOverlay" > 
+		<img id="loadingContent" src="img/logo.png" />
 	</div>
         
     <!-- configure and load dojo -->

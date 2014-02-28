@@ -43,7 +43,6 @@ require([
 			prog.start();
 			setTimeout(function(){
 				app.discoverDevices();
-				hide_progress_indicator_only();
 			}, 1000);
 		}
 		

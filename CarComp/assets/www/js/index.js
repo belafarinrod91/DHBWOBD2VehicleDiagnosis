@@ -169,7 +169,12 @@ document.addEventListener("backbutton", function(){
 
 
 function dummyJSON(json){
-	var result = [{"engineRPM":"12"}, {"speed":"13"}, {"runtime":"14"}, {"oilTemperature":"15"}, {"fuelType":"gas or diesel... dunno"}, {"fuelRate":"17"}];
+	var result = [{"engineRPM":""+Math.floor((Math.random() * 7) + 1)},
+	              {"speed":""+Math.floor((Math.random() * 200) + 1)}, 
+	              {"runtime":""+Math.floor((Math.random() * 1000) + 1)}, 
+	              {"oilTemperature":""+Math.floor((Math.random() * 100) + 1)}, 
+	              {"fuelType":"Gas E"+Math.floor((Math.random() * 100) + 1)}, 
+	              {"fuelRate":""+Math.floor((Math.random() * 10) + 1)}];
 	return result;
 }
 
@@ -179,5 +184,13 @@ function refreshValues(){
 	setDisplayValues(dummyJSON(request));
 }
 
+function refreshGauges(){
+	var request=[{"value":"engineRPM"}, {"value":"speed"}, {"value":"runtime"}, {"value":"oilTemperature"}, {"value":"fuelType"}, {"value":"fuelRate"}];
+	setGaugeValues(dummyJSON(request));
+}
+
+setInterval(function() {
+	refreshGauges();
+}, 5000);
 
 

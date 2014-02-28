@@ -2,6 +2,7 @@ require([
 		"dojo/dnd/Moveable",
 		"dojo/dom",
 		"dojo/dom-style",
+		"dojo/dom-construct",
 		"dijit/registry",
 		"dojox/mobile/ProgressIndicator",
 		"dojo/_base/connect",
@@ -20,7 +21,7 @@ require([
 		"dojo/query",
 		"dojox/geo/openlayers/Map",
 		"dojo"
-	], function(Moveable, dom, domStyle, registry, ProgressIndicator, connect){
+	], function(Moveable, dom, domStyle, domConstruct, registry, ProgressIndicator, connect){
 		
 		//displaying a dialog
 		show = function(dlg){
@@ -72,8 +73,18 @@ require([
 	         list.addChild(childWidget);
 		}
 		
-		addGauge=function(gaugeName){
-			dom.byId("gauges").innerHTML+="<div id='"+gaugeName+"' align='center' style='width:100px; height:100px;' onClick='customizeDiv("+gaugeName+")'></div>";
+		//creating a new Gauge and append it to the "gauges" div
+		addGauge = function(gaugeName){
+			domConstruct.create("div", {
+				id: gaugeName,
+				align: "center",
+				style: { 
+					width: "200px",
+					height: "200px"
+				},
+				onClick: "customizeDiv("+gaugeName+")"
+			}, 
+			"gauges");
 			makeGauge(gaugeName);
 		};
 		
@@ -96,10 +107,13 @@ require([
 		
 		//creating a circular gauge
 		makeGauge = function(id){
-			max=getGaugeMax(id);
-			tick=getGaugeTick(id);
+			var specs = getGaugeSpecs(id);
 			
-			gauge = new dojox.gauges.GlossyCircularGauge({
+			var type=specs[0];
+			var max=specs[1];
+			var tick=specs[2];
+			
+			var newGauge = new dojox.gauges.GlossyCircularGauge({
 			    background: [255, 255, 255, 0],
 			    value: 0,
 			    min: 0,
@@ -110,52 +124,46 @@ require([
 			    height: domStyle.get(id, "height"),
 			    noChange: true
 			}, dojo.byId(id));
-			gauge.startup();
+			newGauge.startup();
 		};
 		
-		getGaugeMax = function(id){
-			if(id=="rpmGauge"){
-				return 7;
-			}else if(id=="speedGauge"){
-				return 250;
-			}else if(id=="runTimeGauge"){
-				return 1000;
-			}else if(id=="oilTempGauge"){
-				return 200;
-			}else if(id=="fuelTypeGauge"){
-				return 100;
-			}else if(id=="fualRateGauge"){
-				return 10;
+		getGaugeSpecs = function(id){
+			var type;
+			var max;
+			var tick;
+			if(id=="gauge_engineRPM"){
+				type = "circular";
+				max = 7;
+				tick = 1;
+			}else if(id=="gauge_speed"){
+				type = "circular";
+				max = 250;
+				tick = 20;
+			}else if(id=="gauge_runtime"){
+				type = "circular";
+				max = 1000;
+				tick = 100;
+			}else if(id=="gauge_oilTemperature"){
+				type = "circular";
+				max = 200;
+				tick = 20;
+			}else if(id=="gauge_fuelType"){
+				type = "circular";
+				max = 100;
+				tick = 10;
+			}else if(id=="gauge_fuelRate"){
+				type = "circular";
+				max = 10;
+				tick = 1;
 			}else{
-				return 0;
+				alert("An Error getting the Gauge Specs occurred.");
+				return;
 			}
+			return [type, max, tick];
 		}
 		
-		getGaugeTick = function(id){
-			if(id=="rpmGauge"){
-				return 1;
-			}else if(id=="speedGauge"){
-				return 20;
-			}else if(id=="runTimeGauge"){
-				return 100;
-			}else if(id=="oilTempGauge"){
-				return 10;
-			}else if(id=="fuelTypeGauge"){
-				return 10;
-			}else if(id=="fualRateGauge"){
-				return 1;
-			}else{
-				return 0;
-			}
-		}
-		
-		removeGauges = function(){
-			if (registry.byId("rpmGauge") != null){
-				gauge = registry.byNode(dom.byId("rpmGauge"));
-				alert(gauge.value);
-				dojo.empty("rpmGauge");
-				gauge.destroy();
-			}
+		removeGauge = function(){
+			//TODO: add code to delete gauge
 		}
 		
 		//customize functionality of "display gauges"
@@ -180,12 +188,22 @@ require([
 			}
 		}
 		
-		//this function takes an array of 6 elements and uses it to update the labels of the display list
+		//this function takes an array of elements and uses it to update the labels of the display list
 		setDisplayValues = function(values){
-			var response = values;
-			response.forEach(function(item) {
+			values.forEach(function(item) {
 				for (key in item){
 					registry.byId("display_"+key).set("rightText", item[key]);
+				}
+			});
+		}
+
+		//this function takes an array of elements and uses it to update the labels of the gauges
+		setGaugeValues = function(values){
+			values.forEach(function(item) {
+				for (key in item){
+					if(registry.byId("gauge_"+key) != null){
+						registry.byId("gauge_"+key).set("value", item[key]);
+					}
 				}
 			});
 		}
@@ -198,8 +216,8 @@ require([
 		resizeGaugeIncrease=function(){
 			selectedDivs=dojo.query(".selectedDiv");
 			if(selectedDivs.length>0){
-				domStyle.set(selectedDivs[0], "width", domStyle.get(selectedDivs[0], "width")+5+"px");
-				domStyle.set(selectedDivs[0], "height", domStyle.get(selectedDivs[0], "height")+5+"px");
+				domStyle.set(selectedDivs[0], "width", domStyle.get(selectedDivs[0], "width")+10+"px");
+				domStyle.set(selectedDivs[0], "height", domStyle.get(selectedDivs[0], "height")+10+"px");
 				rerenderGauge(selectedDivs[0].id);
 			}
 		}
@@ -207,8 +225,8 @@ require([
 		resizeGaugeDecrease=function(){
 			selectedDivs=dojo.query(".selectedDiv");
 			if(selectedDivs.length>0){
-				domStyle.set(selectedDivs[0], "width", domStyle.get(selectedDivs[0], "width")-5+"px");
-				domStyle.set(selectedDivs[0], "height", domStyle.get(selectedDivs[0], "height")-5+"px");
+				domStyle.set(selectedDivs[0], "width", domStyle.get(selectedDivs[0], "width")-10+"px");
+				domStyle.set(selectedDivs[0], "height", domStyle.get(selectedDivs[0], "height")-10+"px");
 				rerenderGauge(selectedDivs[0].id);
 			}
 		}
@@ -247,14 +265,6 @@ require([
 		 		  alert("There went something wrong, calling the new state of BluetoothIndicator");
 		 	   }
 			});
-			
-			setInterval(function() {
-				var gauges = registry.findWidgets(dom.byId("gauges"));
-				for (i=0; i<gauges.length; i++){
-					randomValue = Math.floor((Math.random() * 100) + 1);
-				    gauges[i].set("value", randomValue);
-				}
-		    }, 5000);
 		});
 		
 		//Hides loading overlay when dojo is fully initialized

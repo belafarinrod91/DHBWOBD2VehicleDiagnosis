@@ -154,13 +154,12 @@
 			</ul>
 			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide('addGaugePopup')">Cancel</button>
 		</div>
-		<h1 id="displayGaugesFooter" data-dojo-type="dojox.mobile.Heading" data-dojo-props="back:'Home', moveTo:'home'" style="position:absolute; bottom: 0px;">
-			Gauges
-			<span data-dojo-type="dojox.mobile.ToolBarButton" style="float:right;" onClick="makeMoveable()">
-				Customize
+		<h1 id="displayGaugesFooter" data-dojo-type="dojox.mobile.Heading" style="position:absolute; bottom: 0px; visibility:hidden;">
+			<span data-dojo-type="dojox.mobile.ToolBarButton" style="float:right; width:10%" onClick="resizeGaugeIncrease();">
+				+
 			</span>
-			<span data-dojo-type="dojox.mobile.ToolBarButton" style="visibility:hidden; float:right;" onClick="show('addGaugePopup')">
-				Add
+			<span data-dojo-type="dojox.mobile.ToolBarButton" style="float:right; width:10%" onClick="resizeGaugeDecrease();">
+				-
 			</span>
 		</h1>	
 	</div>

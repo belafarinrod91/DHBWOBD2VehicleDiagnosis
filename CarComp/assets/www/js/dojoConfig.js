@@ -16,7 +16,10 @@ require([
 		"dojox/mobile/deviceTheme", 
 		"dojo/domReady!",
 		"dijit/form/Button",
-		"dojox/gauges/GlossyCircularGauge",
+		"dijit/form/TextBox",
+		"dojox/dgauges/components/black/CircularLinearGauge",
+		"dojox/dgauges/components/black/SemiCircularLinearGauge",
+		"dojox/dgauges/components/grey/SemiCircularLinearGauge",
 		"dojo/window",
 		"dojo/query",
 		"dojox/geo/openlayers/Map",
@@ -86,6 +89,9 @@ require([
 			}, 
 			"gauges");
 			makeGauge(gaugeName);
+			registry.byId(gaugeName+"_add").set("clickable", false);
+			domStyle.set(dom.byId(gaugeName+"_add"), "background", "grey");
+			
 		};
 		
 		var dnd;
@@ -113,18 +119,53 @@ require([
 			var max=specs[1];
 			var tick=specs[2];
 			
-			var newGauge = new dojox.gauges.GlossyCircularGauge({
-			    background: [255, 255, 255, 0],
-			    value: 0,
-			    min: 0,
-			    max: max,
-			    majorTicksInterval: tick,
-			    minorTicksInterval: tick/2,
-			    width: domStyle.get(id, "width"),
-			    height: domStyle.get(id, "height"),
-			    noChange: true
-			}, dojo.byId(id));
-			newGauge.startup();
+			if(type=="circular"){
+				var newGauge = new dojox.dgauges.components.black.CircularLinearGauge({
+				    minimum: 0,
+				    maximum: max,
+				    majorTickInterval: tick,
+				    minorTickInterval: tick/2,
+				    width: domStyle.get(id, "width"),
+				    height: domStyle.get(id, "height"),
+				    interactionMode: "none",
+				    animationDuration: 100,
+				}, dojo.byId(id));
+			}else if(type=="half_top"){
+				var newGauge = new dojox.dgauges.components.grey.SemiCircularLinearGauge({
+					borderColor: "#000000",
+					fillColor: "#000000",
+				    minimum: 0,
+				    maximum: max,
+				    majorTickInterval: tick,
+				    minorTickInterval: tick/2,
+				    width: domStyle.get(id, "width"),
+				    height: domStyle.get(id, "height"),
+				    interactionMode: "none",
+				    animationDuration: 100,
+				}, dojo.byId(id));
+			}else if(type=="half_bottom"){
+				var newGauge = new dojox.dgauges.components.black.SemiCircularLinearGauge({
+				    minimum: 0,
+				    maximum: max,
+				    majorTickInterval: tick,
+				    minorTickInterval: tick/2,
+				    width: domStyle.get(id, "width"),
+				    height: domStyle.get(id, "height"),
+				    interactionMode: "none",
+				    animationDuration: 100,
+				}, dojo.byId(id));
+			}else{
+				var myTextBox = new dijit.form.TextBox({
+			        value: "0",
+			        readOnly: true,
+			        style: { 
+						width: "200px",
+						height: "200px"
+					},
+			        onclick: "customizeDiv("+id+")"
+			    }, dojo.byId(id));
+			}
+			
 		};
 		
 		getGaugeSpecs = function(id){
@@ -140,19 +181,19 @@ require([
 				max = 250;
 				tick = 20;
 			}else if(id=="gauge_runtime"){
-				type = "circular";
+				type = "label";
 				max = 1000;
 				tick = 100;
 			}else if(id=="gauge_oilTemperature"){
-				type = "circular";
+				type = "half_top";
 				max = 200;
 				tick = 20;
 			}else if(id=="gauge_fuelType"){
-				type = "circular";
+				type = "label";
 				max = 100;
 				tick = 10;
 			}else if(id=="gauge_fuelRate"){
-				type = "circular";
+				type = "half_bottom";
 				max = 10;
 				tick = 1;
 			}else{
@@ -163,7 +204,12 @@ require([
 		}
 		
 		removeGauge = function(){
-			//TODO: add code to delete gauge
+			selectedDivs=dojo.query(".selectedDiv");
+			if(selectedDivs.length>0){
+				registry.byId(selectedDivs[0].id).destroy();
+				registry.byId(selectedDivs[0].id+"_add").set("clickable", true);
+				domStyle.set(dom.byId(selectedDivs[0].id+"_add"), "background", "white");
+			}
 		}
 		
 		//customize functionality of "display gauges"
@@ -202,7 +248,7 @@ require([
 			values.forEach(function(item) {
 				for (key in item){
 					if(registry.byId("gauge_"+key) != null){
-						registry.byId("gauge_"+key).set("value", item[key]);
+						registry.byId("gauge_"+key).set("value", parseFloat(item[key]));
 					}
 				}
 			});

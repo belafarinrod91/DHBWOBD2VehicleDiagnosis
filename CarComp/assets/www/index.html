@@ -100,9 +100,9 @@
 	<div id="display" data-dojo-type="dojox.mobile.View">
 		<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props="back:'Home', moveTo:'home'">
 			Display
-			<div id="custButtonDisplay" data-dojo-type="dojox.mobile.ToolBarButton" style="float:right;" onClick="makeMoveableDisplay()">
+			<span id="custButtonDisplay" data-dojo-type="dojox.mobile.ToolBarButton" style="float:right;" onClick="makeMoveableDisplay()">
 				Customize
-			</div>
+			</span>
 		</h1>
 
 		<ul id="displayList" data-dojo-type="dojox.mobile.RoundRectList" data-dojo-props='editable:true'>
@@ -141,20 +141,23 @@
 		<div id="addGaugePopup" data-dojo-type="dojox.mobile.SimpleDialog">
 			<div id="titleAddGaugePopup" class="mblSimpleDialogText">Please select a gauge to add.</div>
 			<ul id="ListAddgauges" data-dojo-type="dojox.mobile.RoundRectList">
-				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Engine RPM', clickable : true" onClick="addGauge('gauge_engineRPM'); hide('addGaugePopup');"/>
-				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Speed', clickable : true" onClick="addGauge('gauge_speed'); hide('addGaugePopup');"/>
-				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Run Time', clickable : true" onClick="addGauge('gauge_runtime'); hide('addGaugePopup');"/>
-				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Oil Temperature', clickable : true" onClick="addGauge('gauge_oilTemperature'); hide('addGaugePopup');"/>
-				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Fuel Type', clickable : true" onClick="addGauge('gauge_fuelType'); hide('addGaugePopup');"/>
-				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Fuel Rate', clickable : true" onClick="addGauge('gauge_fuelRate'); hide('addGaugePopup');"/>
+				<li id="gauge_engineRPM_add" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Engine RPM', clickable : true" onClick="addGauge('gauge_engineRPM'); hide('addGaugePopup');"/>
+				<li id="gauge_speed_add" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Speed', clickable : true" onClick="addGauge('gauge_speed'); hide('addGaugePopup');"/>
+				<li id="gauge_runtime_add" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Run Time', clickable : true" onClick="addGauge('gauge_runtime'); hide('addGaugePopup');"/>
+				<li id="gauge_oilTemperature_add" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Oil Temperature', clickable : true" onClick="addGauge('gauge_oilTemperature'); hide('addGaugePopup');"/>
+				<li id="gauge_fuelType_add" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Fuel Type', clickable : true" onClick="addGauge('gauge_fuelType'); hide('addGaugePopup');"/>
+				<li id="gauge_fuelRate_add" data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Fuel Rate', clickable : true" onClick="addGauge('gauge_fuelRate'); hide('addGaugePopup');"/>
 			</ul>
 			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide('addGaugePopup')">Cancel</button>
 		</div>
 		<h1 id="displayGaugesFooter" data-dojo-type="dojox.mobile.Heading" style="position:absolute; bottom: 0px; visibility:hidden;">
-			<span data-dojo-type="dojox.mobile.ToolBarButton" style="float:right; width:10%" onClick="resizeGaugeIncrease();">
+			<span data-dojo-type="dojox.mobile.ToolBarButton" class="mblSimpleDialogButton mblRedButton" style="float:left; width:15%" onClick="removeGauge();">
+				Remove
+			</span>
+			<span data-dojo-type="dojox.mobile.ToolBarButton" style="float:right; width:15%" onClick="resizeGaugeIncrease();">
 				+
 			</span>
-			<span data-dojo-type="dojox.mobile.ToolBarButton" style="float:right; width:10%" onClick="resizeGaugeDecrease();">
+			<span data-dojo-type="dojox.mobile.ToolBarButton" style="float:right; width:15%" onClick="resizeGaugeDecrease();">
 				-
 			</span>
 		</h1>	

@@ -55,14 +55,16 @@ var app = {
         bConnection.disableBT();
     },
     
-    isBTEnabled : function() {
+   isBTEnabled : function() {
+    	var enabled;
         bConnection.isBTEnabled(
           function(r){
-			return r;
+         enabled = r;
         },
           function(e){
-        	  console.log("Failure during calling isBTEnabled");
+         console.log("Failure during calling isBTEnabled");
         });
+        return enabled;
     },
     
     discoverDevices : function(){

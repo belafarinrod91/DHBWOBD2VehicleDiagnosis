@@ -367,6 +367,8 @@ require([
 				  }
 		});
 		
+		
+		
 		//configuration for bluetooth on/off-switch
 		if(app.isBTEnabled()){
 			registry.byId("bluetoothSwitch").set("value", "on");

@@ -107,6 +107,13 @@ public class OBD2Library {
 		return result; 
 	}
 	
+	
+	public static String getLabelForAnswer(String answer){
+		answer = answer.replace(" ", "");
+		return answer.substring(2, 4);
+	}
+	
+	
 	private static int hexParser(String value){
 		value = value.replace(" ", "");
 		int result = Integer.parseInt(value, 16);

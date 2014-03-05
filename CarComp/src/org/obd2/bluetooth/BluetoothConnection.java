@@ -69,6 +69,10 @@ public class BluetoothConnection extends CordovaPlugin {
 	private int mMsgCnt;
 	private JSONArray mMsgList;
 	private JSONArray mResultArrayForOBD2Values;
+	
+	//error handling 
+	private List<String> mSentValues; 
+	private List<String> mReceivedValues;
 
 	private GPSTracker mGps;
 	private CallbackContext mCallbackContext;
@@ -102,6 +106,9 @@ public class BluetoothConnection extends CordovaPlugin {
 
 		mConnectionHandler = new ConnectionHandler(context, mHandler);
 		OBD2Library.initializeLib();
+		
+		mSentValues = new ArrayList<String>();
+		mReceivedValues = new ArrayList<String>();
 
 		mGps = new GPSTracker(context);
 	}
@@ -481,6 +488,9 @@ public class BluetoothConnection extends CordovaPlugin {
 	}
 
 	public PluginResult getOBD2Values(JSONArray args) {
+		mReceivedValues.clear();
+		mSentValues.clear();	
+		
 		PluginResult result = null;
 		mUseListToSendCodes = true;
 		mResultsOfOBD2Values = new ArrayList<String>();		
@@ -504,6 +514,7 @@ public class BluetoothConnection extends CordovaPlugin {
 			JSONObject item = mMsgList.getJSONObject(mMsgCnt);
 			String tmpVal = item.getString("value");
 			String val = OBD2Library.getCodeForName(tmpVal);
+			mSentValues.add(val);
 			Log.d(TAG, "JSON in GETOBD2Val " + tmpVal + "/" + val);
 			writeMessage("01" + val);
 			mMsgCnt++;
@@ -518,11 +529,15 @@ public class BluetoothConnection extends CordovaPlugin {
 		Log.d(TAG, "process Msg"+mResultsOfOBD2Values.size());
 		for(String s :mResultsOfOBD2Values){ 
 			JSONObject obj = OBD2Library.returnResultObject(s); 
+			mReceivedValues.add(OBD2Library.getLabelForAnswer(s));
 			mResultArrayForOBD2Values.put(obj); 
 			} 
-		Log.d(TAG, "RESULT "+mResultsOfOBD2Values.toString());
-		Log.d(TAG, "RESULT ARRAY FROM PROCESS MSG :"+mResultArrayForOBD2Values);
 		
+		
+		
+		if(!mSentValues.equals(mReceivedValues)){
+			this.webView.sendJavascript("alert('Some values are missing.');");	
+		}
 		
 		this.webView.sendJavascript("fetchOBD2Values("+ mResultArrayForOBD2Values+");");
 	}

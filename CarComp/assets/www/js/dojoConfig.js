@@ -269,10 +269,25 @@ require([
 		});
 	}
 	
-	renderMap = function(){
-		map = new dojox.geo.openlayers.Map("navigation_map");
-	    map.fitTo([ -160, 70, 160, -70 ]);
-	}
+	renderMap=function(){
+			var location = app.getLocation();
+			var lat = location.lat;
+			var lon = location.lon;
+			
+			var myLatlng = new google.maps.LatLng(lat, lon);
+		    var myOptions = {
+		        zoom: 13,
+		        center: myLatlng,
+		        mapTypeId: google.maps.MapTypeId.ROADMAP
+		    }
+		    var map = new google.maps.Map(document.getElementById("navigation_map"), myOptions);
+
+		    var marker = new google.maps.Marker({
+		        position: myLatlng, 
+		        map: map,
+		        title:"Hello World!"
+		    });   
+		}
 	
 	resizeGaugeIncrease=function(){
 		selectedDivs=dojo.query(".selectedDiv");

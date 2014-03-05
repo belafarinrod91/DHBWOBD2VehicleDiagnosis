@@ -6,9 +6,13 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Log;
+
 public class OBD2Library {
 	
 	private static Map<String,String> mLib = new HashMap<String,String>();
+	private static String TAG = "OBD2Lib";
+	
 	
 	public static void initializeLib(){
 		mLib.put("oilTemperature", "5C" );
@@ -85,16 +89,16 @@ public class OBD2Library {
 	public static JSONObject returnResultObject(String value){
 		JSONObject result = new JSONObject();
 		
+		value = value.replace(" ", "");
+		
 		String returnCode = value.substring(0,2);
 		String label = value.substring(2, 4);
 		String resultValue = value.substring(4, value.length());
-		
+
 		label = getNameForCode(label);
 		resultValue = resultValueParser(label, resultValue);
-		
 		try {
-			result.put("label", label);
-			result.put("value", resultValue);
+			result.put(label, resultValue);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -106,7 +110,6 @@ public class OBD2Library {
 	private static int hexParser(String value){
 		value = value.replace(" ", "");
 		int result = Integer.parseInt(value, 16);
-		System.out.println("result "+result);
 		return result; 
 	}
 	

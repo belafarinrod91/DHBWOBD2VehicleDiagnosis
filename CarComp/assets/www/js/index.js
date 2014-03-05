@@ -56,15 +56,13 @@ var app = {
     },
     
     isBTEnabled : function() {
-    	var enabled;
         bConnection.isBTEnabled(
           function(r){
-        	  enabled = r;
+			return r;
         },
           function(e){
         	  console.log("Failure during calling isBTEnabled");
         });
-        return enabled;
     },
     
     discoverDevices : function(){
@@ -139,27 +137,58 @@ var app = {
     },
     
     getOBD2ConnectionStatus : function(){
-    	var connected;
     	bConnection.getOBD2ConnectionStatus(
-                function(r) {
-                	connected = r;
-                },
-                       
-                function(e) {
-                	console.log("error during calling 'getOBD2ConnectionStatus'")
-                });
-        return connected; 
+        	function(r) {
+            	return r;
+            },
+            function(e) {
+               	console.log("error during calling 'getOBD2ConnectionStatus'")
+            });
     },
     
-    getOBD2Values : function(){
-    	bConnection.getOBD2Values(
-    			function(r){
-    				console.log(r);
+    getOBD2Values : function(values){
+    	bConnection.getOBD2Values(values,
+    		function(r){
+        		return r;
+
+    	},
+    		function(e){
+        		console.log("error during calling 'getOBD2Values'");
+
+    	});
+    },
+    
+    fetchOBD2Values : function(){
+    	bConnection.fetchOBD2Values(
+    		function(r){
+    			return r;
+    		},
+    		function(e){
+    			console.log("error during calling 'fetchOBD2Values'");
+    		});
+    },
+    
+    getLocationStatus : function() {
+            bConnection.getLocationStatus(
+            	function(r){
+					return r;
+            },
+              function(e){
+            	  console.log("Failure during calling 'getLocationStatus'");
+            });
+        },
+	
+	getLocation : function(){
+    	var location; 
+    	bConnection.getLocation(
+    		function(r){
+    			location = r;
     			},
-    			function(e){
-    				console.log("error during calling 'getOBD2Values'")
-    			});
-    	}
+    		function(e){
+    			console.log("error during calling 'getLocation'");
+    		});
+    	return location;
+	}
 };
 
 //customized android backbutton
@@ -178,10 +207,16 @@ function dummyJSON(json){
 	return result;
 }
 
+
+function fetchOBD2Values(obd2Values){
+	console.log(obd2Values);
+	setDisplayValues(obd2Values);
+}
+
 //just generates random values atm... Here a function should be called receiving the actual values from the bt-adapter.
 function refreshValues(){
-	var request=[{"value":"engineRPM"}, {"value":"speed"}, {"value":"runtime"}, {"value":"oilTemperature"}, {"value":"fuelType"}, {"value":"fuelRate"}];
-	setDisplayValues(dummyJSON(request));
+	var request =[{"value":"engineRPM"}, {"value":"speed"}];
+	app.getOBD2Values(request);
 }
 
 function refreshGauges(){

@@ -25,10 +25,16 @@ cordova.define("org.obd2.bluetooth.BluetoothConnection", function(require, expor
 	
 	writeMessage : function (message, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "writeMessage", [message]);},
 	
-	getOBD2ConnectionStatus : function (message, success, failure) {
+	getOBD2ConnectionStatus : function (success, failure) {
 		return cordova.exec(success, failure, "BluetoothConnection", "getOBD2ConnectionStatus", []);},
 		
-	getOBD2Values : function (message, success, failure) {
-		return cordova.exec(success, failure, "BluetoothConnection", "getOBD2Values", []);}	
+	getOBD2Values : function (values, success, failure) {
+		return cordova.exec(success, failure, "BluetoothConnection", "getOBD2Values", values);},
+
+	getLocationStatus : function (success, failure) {
+		return cordova.exec(success, failure, "BluetoothConnection", "getLocationStatus", []);}, 
+	
+	getLocation : function (success, failure) {
+		return cordova.exec(success, failure, "BluetoothConnection", "getLocation", []);}	
 	}
 module.exports = bConnection;});

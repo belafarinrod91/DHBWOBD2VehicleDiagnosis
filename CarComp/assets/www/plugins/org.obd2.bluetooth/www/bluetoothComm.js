@@ -19,7 +19,8 @@ cordova.define("org.obd2.bluetooth.BluetoothConnection", function(require, expor
 	isBound : function (macAddress, success, failure) {
 		return cordova.exec(success, failure, "BluetoothConnection", "isBound", [macAddress]);},
 	
-	listBoundDevices : function (success, failure) {cordova.exec(success, failure, "BluetoothConnection", "listBoundDevices", []);},
+	listBoundDevices : function (success, failure) {
+		return cordova.exec(success, failure, "BluetoothConnection", "listBoundDevices", []);},
 
 	connect: function(address, success, failure){cordova.exec(success, failure, "BluetoothConnection", "connect", [address]);},
 	

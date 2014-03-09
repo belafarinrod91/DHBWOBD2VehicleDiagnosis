@@ -41,17 +41,27 @@ require([
 	
 	//displaying a progress indicator and its dialog
 	var prog;
-	show_progress_indicator = function(dlg,cont){
+	show_progress_indicator = function(parameter,dlg,cont){
 		dom.byId("titleDevicesPopup").innerHTML="Please wait ...";
 		show(dlg);
 		var container = dom.byId(cont);
 		prog = ProgressIndicator.getInstance();
 		container.appendChild(prog.domNode);
+		
+		var list = registry.byId(devices);
+		dojo.empty(list);
+		
 		prog.start();
 		setTimeout(function(){
-			app.discoverDevices();
+			if(parameter == 'discover'){
+				app.discoverDevices();
+			}
+			else if(parameter == 'listBoundedDevices'){
+				app.listBoundDevices();
+			}
 		}, 1000);
 	}
+	
 	
 	//hiding a progress indicator and its dialog
 	hide_progress_indicator = function(dlg){
@@ -262,7 +272,8 @@ require([
 	setGaugeValues = function(values){
 		values.forEach(function(item) {
 			for (key in item){
-				if(registry.byId("gauge_"+key) != null){
+				if(registry.byId("gauge_"+key) != null && parseFloat(item[key]) != -1){
+					//alert(parseFloat(item[key]));
 					registry.byId("gauge_"+key).set("value", parseFloat(item[key]));
 				}
 			}
@@ -364,6 +375,9 @@ require([
 			    function(view, moveTo, dir, transition, context, method){
 				  if(moveTo=="navigation"){
 					  renderMap();
+				  }
+				  else if(moveTo == 'displayGauges'){
+				  		refreshGauges();
 				  }
 		});
 		

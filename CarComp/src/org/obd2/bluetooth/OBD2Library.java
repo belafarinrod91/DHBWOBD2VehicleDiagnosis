@@ -2,6 +2,7 @@ package org.obd2.bluetooth;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,11 +90,25 @@ public class OBD2Library {
 	public static JSONObject returnResultObject(String value){
 		JSONObject result = new JSONObject();
 		
-		value = value.replace(" ", "");
+		String returnCode = "";
+		String label = "";
+		String resultValue ="";
 		
-		String returnCode = value.substring(0,2);
-		String label = value.substring(2, 4);
-		String resultValue = value.substring(4, value.length());
+		value = value.replaceAll("[^0-9a-fA-F]", "");
+		
+		
+		int maxLenght= 0;
+		if(value.length() > 8){
+			maxLenght = 8;
+		}
+		else {
+			maxLenght = value.length();
+		}
+		
+		
+		returnCode = value.substring(0,2);
+		label = value.substring(2, 4);
+		resultValue = value.substring(4, maxLenght);
 
 		label = getNameForCode(label);
 		resultValue = resultValueParser(label, resultValue);
@@ -115,9 +130,14 @@ public class OBD2Library {
 	
 	
 	private static int hexParser(String value){
-		value = value.replace(" ", "");
-		int result = Integer.parseInt(value, 16);
-		return result; 
+		if (value.equals("")){
+			return -1;
+		}
+		else {
+			value = value.replaceAll("[^0-9A-Z]", "");
+			int result = Integer.parseInt(value, 16);
+			return result;
+		}
 	}
 	
 	
@@ -131,8 +151,8 @@ public class OBD2Library {
 	
 	private static String engineRPM(String value){
 		String result = null;
-		int iValue = hexParser(value)/4;
-		result = String.valueOf(iValue);
+		float iValue = (hexParser(value)/4)/1000;
+		result = Float.toString(iValue);
 		return result;
 	}
 	

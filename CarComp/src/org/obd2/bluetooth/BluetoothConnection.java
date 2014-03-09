@@ -142,7 +142,7 @@ public class BluetoothConnection extends CordovaPlugin {
 			result = unpair(args);
 
 		} else if (ACTION_LIST_BOUND_DEVICES.equals(action)) {
-			result = listBoundDevices();
+			result = listBoundDevices(callbackContext);
 
 		} else if (ACTION_STOP_DISCOVER.equals(action)) {
 			result = stopDiscover();
@@ -350,45 +350,30 @@ public class BluetoothConnection extends CordovaPlugin {
 		return result;
 	}
 
-	public PluginResult listBoundDevices() {
+	public PluginResult listBoundDevices(CallbackContext callbackContext) {
 		PluginResult result = null;
-		try {
-			Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
-			int count = 0;
-			String resultBoundDevices = "[ ";
-			if (pairedDevices.size() > 0) {
-				for (BluetoothDevice device : pairedDevices) {
-					Log.i(TAG, device.getName() + " " + device.getAddress()
-							+ " " + device.getBondState());
-					if ((device.getName() != null)
-							&& (device.getBluetoothClass() != null)) {
-						resultBoundDevices = resultBoundDevices
-								+ " { \"name\" : \"" + device.getName()
-								+ "\" ," + "\"address\" : \""
-								+ device.getAddress() + "\" ,"
-								+ "\"class\" : \""
-								+ device.getBluetoothClass().getDeviceClass()
-								+ "\" }";
-						if (count < pairedDevices.size() - 1)
-							resultBoundDevices = resultBoundDevices + ",";
-					} else
-						Log.i(TAG,
-								device.getName()
-										+ " Problems retrieving attributes. Device not added ");
-					count++;
+		
+		JSONArray resultArray = new JSONArray();
+		Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+		if (pairedDevices.size() > 0) {
+			for (BluetoothDevice device : pairedDevices) {
+				Log.i(TAG, device.getName() + " " + device.getAddress()+ " " + device.getBondState());
+				JSONObject jDevice = new JSONObject();
+				
+				try {
+					jDevice.put("name", device.getName());
+					jDevice.put("address", device.getAddress());
+					resultArray.put(jDevice);
+
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
-
-			resultBoundDevices = resultBoundDevices + "] ";
-			Log.d("BluetoothPlugin - " + ACTION_LIST_BOUND_DEVICES,
-					"Returning " + resultBoundDevices);
-			result = new PluginResult(PluginResult.Status.OK,
-					resultBoundDevices);
-		} catch (Exception Ex) {
-			Log.d("BluetoothPlugin - " + ACTION_LIST_BOUND_DEVICES,
-					"Got Exception " + Ex.getMessage());
-			result = new PluginResult(PluginResult.Status.ERROR);
 		}
+		result = new PluginResult(PluginResult.Status.OK, resultArray);
+		result.setKeepCallback(true);
+		callbackContext.sendPluginResult(result);
 		return result;
 	}
 
@@ -455,8 +440,7 @@ public class BluetoothConnection extends CordovaPlugin {
 			if (msg.length() > 0) {
 				byte[] send = msg.getBytes();
 				mConnectionHandler.write(send);
-				Log.d("BluetoothPlugin - " + ACTION_WRITE_MESSAGE, "Returning "
-						+ "Result: " + send);
+				//Log.d("BluetoothPlugin - " + ACTION_WRITE_MESSAGE, "Returning "+ "Result: " + send);
 				result = new PluginResult(PluginResult.Status.OK, send);
 			} else {
 				Log.d(TAG, "Nothing to send here.");
@@ -490,6 +474,8 @@ public class BluetoothConnection extends CordovaPlugin {
 	public PluginResult getOBD2Values(JSONArray args) {
 		mReceivedValues.clear();
 		mSentValues.clear();	
+		mResultArrayForOBD2Values = null;
+		mResultsOfOBD2Values = null;
 		
 		PluginResult result = null;
 		mUseListToSendCodes = true;
@@ -509,13 +495,13 @@ public class BluetoothConnection extends CordovaPlugin {
 	}
 
 	public void parseAndWriteMsg() throws JSONException {
-		Log.d(TAG, "parseAndWriteMsg, started");
 		if (mMsgList.length() > mMsgCnt) {
 			JSONObject item = mMsgList.getJSONObject(mMsgCnt);
 			String tmpVal = item.getString("value");
 			String val = OBD2Library.getCodeForName(tmpVal);
 			mSentValues.add(val);
-			Log.d(TAG, "JSON in GETOBD2Val " + tmpVal + "/" + val);
+			
+			Log.d(TAG, "WRITE "+val);
 			writeMessage("01" + val);
 			mMsgCnt++;
 		}	
@@ -526,18 +512,21 @@ public class BluetoothConnection extends CordovaPlugin {
 	
 	public void processMessage(){
 		mResultArrayForOBD2Values = new JSONArray();
-		Log.d(TAG, "process Msg"+mResultsOfOBD2Values.size());
 		for(String s :mResultsOfOBD2Values){ 
-			JSONObject obj = OBD2Library.returnResultObject(s); 
-			mReceivedValues.add(OBD2Library.getLabelForAnswer(s));
-			mResultArrayForOBD2Values.put(obj); 
-			} 
+			if(s.length() > 6 && !s.equals("")){
+				s = s.replaceAll("[^0-9a-fA-F]", "");
+				//Log.d(TAG, "Processed Message "+s);
+				JSONObject obj = OBD2Library.returnResultObject(s); 
+				mReceivedValues.add("");//OBD2Library.getLabelForAnswer(s));
+				mResultArrayForOBD2Values.put(obj); 
+			}
+		} 
 		
 		
 		
-		if(!mSentValues.equals(mReceivedValues)){
+		/*if(!mSentValues.equals(mReceivedValues)){
 			this.webView.sendJavascript("alert('Some values are missing.');");	
-		}
+		} */
 		
 		this.webView.sendJavascript("fetchOBD2Values("+ mResultArrayForOBD2Values+");");
 	}
@@ -589,7 +578,6 @@ public class BluetoothConnection extends CordovaPlugin {
 		if (mGps.canGetLocation()) {
 			res = true;
 		}
-		Log.d(TAG, "Result of getLocationStatus " + res);
 		result = new PluginResult(PluginResult.Status.OK, res);
 		result.setKeepCallback(true);
 		callbackContext.sendPluginResult(result);
@@ -602,7 +590,6 @@ public class BluetoothConnection extends CordovaPlugin {
 
 	public void addDevice(BluetoothDevice device) {
 		if (!mDiscoveredDevices.contains(device)) {
-			Log.i(TAG, "Device stored ");
 			mDiscoveredDevices.add(device);
 		}
 	}
@@ -615,7 +602,6 @@ public class BluetoothConnection extends CordovaPlugin {
 			try {
 				jDevice.put("name", device.getName());
 				jDevice.put("address", device.getAddress());
-				Log.i(TAG, device.getName() + "NAME");
 				result.put(jDevice);
 
 			} catch (JSONException e) {
@@ -630,7 +616,6 @@ public class BluetoothConnection extends CordovaPlugin {
 
 	@Override
 	public void onDestroy() {
-		Log.i(TAG, "onDestroy " + this.getClass());
 		context.unregisterReceiver(mReceiver);
 		super.onDestroy();
 	}
@@ -639,7 +624,6 @@ public class BluetoothConnection extends CordovaPlugin {
 		public void onReceive(Context context, Intent intent) {
 
 			String action = intent.getAction();
-			Log.i(TAG, "Action: " + action);
 
 			if (BluetoothDevice.ACTION_FOUND.equals(action)) {
 
@@ -695,15 +679,16 @@ public class BluetoothConnection extends CordovaPlugin {
 				break;
 			case MESSAGE_WRITE:
 				byte[] writeBuf = (byte[]) msg.obj;
-				Log.d(TAG, "MESSAGE_WRITE: " + msg.obj.toString());
 				break;
 			case MESSAGE_READ:
 				byte[] readBuf = (byte[]) msg.obj;
 				String readMessage = new String(readBuf, 0, msg.arg1);
+				Log.d(TAG, "MESSAGE READ :"+readMessage);
 				if (mUseListToSendCodes) {
 					if (!readMessage.equals(null) && readMessage.contains("41")) {
-						Log.d(TAG, "IN IF : MESSAGE_READ: " + readMessage);
+						//Log.d(TAG, "MESSAGE_READ: " + readMessage);
 						mResultsOfOBD2Values.add(readMessage);
+						Log.d(TAG, "WAS ADDED TO LIST "+readMessage);
 						try {
 							parseAndWriteMsg();
 						} catch (JSONException e) {
@@ -712,7 +697,7 @@ public class BluetoothConnection extends CordovaPlugin {
 						}
 					}
 				} else {
-					Log.d(TAG, "NOT IN IF :MESSAGE_READ: " + readMessage);
+					//Log.d(TAG, "NOT IN IF :MESSAGE_READ: " + readMessage);
 				}
 
 				break;

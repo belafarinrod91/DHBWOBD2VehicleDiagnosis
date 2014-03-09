@@ -131,7 +131,32 @@ var app = {
     },
     
     listBoundDevices : function(){
-    	bConnection.listBoundDevices();
+    	bConnection.listBoundDevices(
+    		function(r){
+    			console.log(JSON.stringify(r));
+    			var devices = r;
+                    
+                     //clearing device list
+                     document.getElementById("devices").innerHTML = '';
+                    
+                     //adding new elements to device list
+                     for(d in devices) {
+                             appendListElement(devices[d].name, devices[d].address, "devices");
+                     }
+                    
+                     //setting message displayed to the user
+                     if(document.getElementById("devices").getElementsByTagName("li").length){
+                             document.getElementById("titleDevicesPopup").innerHTML="Please select a device to connect to.";
+                     }
+                     else {
+                             document.getElementById("titleDevicesPopup").innerHTML="No Device was found !";
+                     }
+                     hide_progress_indicator_only();
+    			
+    		},
+    		function(e){
+    			console.log("error during calling 'listBoundDevices'");
+    		});
     },
     
     writeMessage : function(message){
@@ -209,12 +234,15 @@ function dummyJSON(json){
 	return result;
 }
 
-
 function fetchOBD2Values(obd2Values){
-	console.log(obd2Values);
-	setDisplayValues(obd2Values);
+	console.log(JSON.stringify(obd2Values));
+	setGaugeValues(obd2Values);
+	console.log("before refreshing");
+	setTimeout(function() {
+		console.log("refreshing!");
+		refreshValues();
+	}, 500);
 }
-
 //just generates random values atm... Here a function should be called receiving the actual values from the bt-adapter.
 function refreshValues(){
 	var request =[{"value":"engineRPM"}, {"value":"speed"}];
@@ -222,12 +250,14 @@ function refreshValues(){
 }
 
 function refreshGauges(){
-	var request=[{"value":"engineRPM"}, {"value":"speed"}, {"value":"runtime"}, {"value":"oilTemperature"}, {"value":"fuelType"}, {"value":"fuelRate"}];
-	setGaugeValues(dummyJSON(request));
+	//var request=[{"value":"engineRPM"}, {"value":"speed"}, {"value":"runtime"}, {"value":"oilTemperature"}, {"value":"fuelType"}, {"value":"fuelRate"}];
+	//setGaugeValues(dummyJSON(request));
+	refreshValues();
+	
 }
 
-setInterval(function() {
-	refreshGauges();
-}, 5000);
+//setInterval(function() {
+//	refreshGauges();
+//}, 5000);
 
 

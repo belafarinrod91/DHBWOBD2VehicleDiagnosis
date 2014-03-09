@@ -74,17 +74,11 @@
 				Bluetooth is currently
 				<div id="bluetoothSwitch" data-dojo-type="dojox.mobile.Switch"></div>
 			</li>
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="show_progress_indicator('devicesPopup','progress_indicator_container')">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="show_progress_indicator('discover','devicesPopup','progress_indicator_container')">
 				Find BT-Devices
 			</li>
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.listBoundDevices()">
+			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="show_progress_indicator('listBoundedDevices','devicesPopup','progress_indicator_container')">
 				Paired Devices
-			</li>
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.writeMessage('010D')">
-				Show Speed
-			</li>
-			<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="clickable : true" onClick="app.isBound('EC:55:F9:EE:16:75')">
-				IS Bound
 			</li>
 		</ul>
 		

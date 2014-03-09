@@ -583,6 +583,14 @@ public class BluetoothConnection extends CordovaPlugin {
 		callbackContext.sendPluginResult(result);
 		return result;
 	}
+	
+	
+	public PluginResult getInternetStatus(CallbackContext callbackContext){
+		PluginResult result = null;
+		
+		
+		return result;
+	}
 
 	public void setDiscovering(boolean state) {
 		mIsDiscovering = state;

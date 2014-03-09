@@ -82,8 +82,7 @@ require([
         	 clickable : true,
              onClick : function() {
             	hide_progress_indicator("devicesPopup");
-            	dom.byId("btConnectionStatus").innerHTML="connecting to : "+name+" ...";
-             	app.connect(address);
+             	app.connect(name, address);
             }
          });
          list.addChild(childWidget);

@@ -106,8 +106,15 @@ var app = {
     	bConnection.stopDiscover();
     },
    
-    connect : function(address) {
-        bConnection.connect(address);  
+    connect : function(name, address) {
+    	var connectionStatus = app.getOBD2ConnectionStatus();  	
+    	if(!connectionStatus){
+    		bConnection.connect(address);  
+    		dom.byId("btConnectionStatus").innerHTML="connecting to : "+name+" ...";
+    	}
+    	else {
+    		alert("There is already a connection!");
+    	}
     },
     
     pair : function(macAddress){
@@ -164,13 +171,15 @@ var app = {
     },
     
     getOBD2ConnectionStatus : function(){
-    	bConnection.getOBD2ConnectionStatus(
-        	function(r) {
-            	return r;
-            },
-            function(e) {
-               	console.log("error during calling 'getOBD2ConnectionStatus'")
-            });
+    	var enabled;
+        bConnection.getOBD2ConnectionStatus(
+          function(r){
+         enabled = r;
+        },
+          function(e){
+         console.log("Failure during calling isBTEnabled");
+        });
+        return enabled;
     },
     
     getOBD2Values : function(values){

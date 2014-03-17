@@ -230,7 +230,7 @@ require([
 			max = 7;
 			tick = 1;
 			label = "RPM";
-			unit = "/s";
+			unit = "x1000/s";
 		}else if(id=="gauge_speed"){
 			dataType = "value";
 			max = 250;

@@ -306,7 +306,7 @@ require([
 		storageProvider.put("gaugesDiv", dom.byId("gauges").innerHTML);
 		var gauges = new Array();
 		registry.findWidgets(dom.byId("gauges")).forEach(function(gauge){
-			gauges.push({"id":gauge.id, "gaugeType":gaugeType});
+			gauges.push({"id":gauge.id, "gaugeType":gauge.gaugeType});
 		});
 		storageProvider.put("gauges", gauges);
 	}
@@ -438,7 +438,7 @@ require([
 		}
 
 		//load gauges page from local storage
-		if(storageProvider.get("gaugesDiv") != "" && storageProvider.get("gaugesDiv") != null){
+		if(storageProvider.get("gaugesDiV") != "" && storageProvider.get("gaugesDiv") != null && storageProvider.get("gauges") != "" && storageProvider.get("gauges") != null){
 			dom.byId("gauges").innerHTML=storageProvider.get("gaugesDiv");
 			
 			//rerender gauges

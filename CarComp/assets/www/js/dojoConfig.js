@@ -128,7 +128,10 @@ require([
 	}
 	
 	//creating a new gauge
-	makeGauge = function(id, gaugeType=0){
+	makeGauge = function(id, gaugeType){
+		//set default gaugeType to 0
+		gaugeType = typeof gaugeType !== 'undefined' ? gaugeType : 0;
+		
 		var specs = getGaugeSpecs(id);
 		
 		var dataType=specs[0];
@@ -379,7 +382,10 @@ require([
 		}
 	}
 	
-	rerenderGauge = function(id, changeGaugeType=0){
+	rerenderGauge = function(id, changeGaugeType){
+		//set default changeGaugeType to 0
+		changeGaugeType = typeof changeGaugeType !== 'undefined' ? changeGaugeType : 0;
+		
 		//store important data to rerender
 		gaugediv=dom.byId(id);
 		gaugeType=registry.byId(id).get("gaugeType");

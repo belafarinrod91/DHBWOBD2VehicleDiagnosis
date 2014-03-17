@@ -233,7 +233,7 @@ document.addEventListener("backbutton", function(){
 }, false);
 
 
-function dummyJSON(json){
+function dummyJSON(){
 	var result = [{"engineRPM":""+Math.floor((Math.random() * 7) + 1)},
 	              {"speed":""+Math.floor((Math.random() * 200) + 1)}, 
 	              {"runtime":""+Math.floor((Math.random() * 1000) + 1)}, 
@@ -252,6 +252,7 @@ function fetchOBD2Values(obd2Values){
 		refreshValues();
 	}, 500);
 }
+
 //just generates random values atm... Here a function should be called receiving the actual values from the bt-adapter.
 function refreshValues(){
 	var request =[{"value":"engineRPM"}, {"value":"speed"}];
@@ -259,14 +260,10 @@ function refreshValues(){
 }
 
 function refreshGauges(){
-	//var request=[{"value":"engineRPM"}, {"value":"speed"}, {"value":"runtime"}, {"value":"oilTemperature"}, {"value":"fuelType"}, {"value":"fuelRate"}];
-	//setGaugeValues(dummyJSON(request));
-	refreshValues();
-	
+	//refreshValues();
+	setInterval(function() {
+		setGaugeValues(dummyJSON());
+	}, 2000);
 }
-
-//setInterval(function() {
-//	refreshGauges();
-//}, 5000);
 
 

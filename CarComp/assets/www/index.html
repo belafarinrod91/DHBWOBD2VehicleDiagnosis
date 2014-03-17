@@ -154,7 +154,18 @@
 			<span data-dojo-type="dojox.mobile.ToolBarButton" style="float:right; width:15%" onClick="resizeGaugeDecrease();">
 				-
 			</span>
-		</h1>	
+			<span id="displayGaugeAttribute" style="float:right; width:15%" onClick="show('selectAttributePopup');">
+				Size
+			</span>
+		</h1>
+		<div id="selectAttributePopup" data-dojo-type="dojox.mobile.SimpleDialog">
+			<div id="titleSelectAttributePopup" class="mblSimpleDialogText">Please select an attribute to edit.</div>
+			<ul id="ListselectAttributes" data-dojo-type="dojox.mobile.RoundRectList">
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Size', clickable : true" onClick="changeAttribute('Size'); hide('selectAttributePopup');"/>
+				<li data-dojo-type="dojox.mobile.ListItem" data-dojo-props="label:'Type', clickable : true" onClick="changeAttribute('Type'); hide('selectAttributePopup');"/>
+			</ul>
+			<button data-dojo-type="dojox.mobile.Button" class="mblSimpleDialogButton mblRedButton" onclick="hide('selectAttributePopup')">Cancel</button>
+		</div>	
 	</div>
 	
 	<div id="navigation" data-dojo-type="dojox.mobile.View" style="height:100%; width:100%;">

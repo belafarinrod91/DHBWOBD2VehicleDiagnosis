@@ -8,6 +8,7 @@ require([
 		"dojo/dom-style",
 		"dojo/dom-construct",
 		"dojox/mobile/ProgressIndicator",
+		"customWidgets/ValueWidget",
 		"dojox/mobile/parser",
 		"dojox/mobile",
 		"dojox/mobile/compat",
@@ -27,7 +28,10 @@ require([
 		"dojox/geo/openlayers/Map",
 		"dojo",
 		"dojox/storage"
-	], function(connect, domClass, ready, registry, Moveable, dom, domStyle, domConstruct, ProgressIndicator){
+	], function(connect, domClass, ready, registry, Moveable, dom, domStyle, domConstruct, ProgressIndicator, ValueWidget){
+	
+	//global variables
+	var displayGaugeAttribute="Size";
 	
 	//displaying a dialog
 	show = function(dlg){
@@ -123,15 +127,17 @@ require([
 		}
 	}
 	
-	//creating a circular gauge
-	makeGauge = function(id){
+	//creating a new gauge
+	makeGauge = function(id, gaugeType=0){
 		var specs = getGaugeSpecs(id);
 		
-		var type=specs[0];
+		var dataType=specs[0];
 		var max=specs[1];
 		var tick=specs[2];
+		var label=specs[3];
+		var unit=specs[4];
 		
-		if(type=="circular"){
+		if(gaugeType==0 && dataType!="string"){
 			var newGauge = new dojox.dgauges.components.black.CircularLinearGauge({
 			    minimum: 0,
 			    maximum: max,
@@ -140,9 +146,20 @@ require([
 			    width: domStyle.get(id, "width"),
 			    height: domStyle.get(id, "height"),
 			    interactionMode: "none",
-			    animationDuration: 100,
+			    animationDuration: 200,
 			}, dojo.byId(id));
-		}else if(type=="half_top"){
+			
+			domConstruct.create("span", {
+				id: id+"_label",
+				innerHTML: label+" ["+unit+"]",
+				style: { 
+					position: "relative",
+					bottom: "25%",
+					color: "white"
+				},
+			}, 
+			id);
+		}else if(gaugeType==1 && dataType!="string"){
 			var newGauge = new dojox.dgauges.components.grey.SemiCircularLinearGauge({
 				borderColor: "#000000",
 				fillColor: "#000000",
@@ -153,9 +170,20 @@ require([
 			    width: domStyle.get(id, "width"),
 			    height: domStyle.get(id, "height"),
 			    interactionMode: "none",
-			    animationDuration: 100,
+			    animationDuration: 200,
 			}, dojo.byId(id));
-		}else if(type=="half_bottom"){
+			
+			domConstruct.create("span", {
+				id: id+"_label",
+				innerHTML: label+" ["+unit+"]",
+				style: { 
+					position: "relative",
+					bottom: "70%",
+					color: "black"
+				},
+			}, 
+			id);
+		}else if(gaugeType==2 && dataType!="string"){
 			var newGauge = new dojox.dgauges.components.black.SemiCircularLinearGauge({
 			    minimum: 0,
 			    maximum: max,
@@ -164,55 +192,77 @@ require([
 			    width: domStyle.get(id, "width"),
 			    height: domStyle.get(id, "height"),
 			    interactionMode: "none",
-			    animationDuration: 100,
+			    animationDuration: 200,
 			}, dojo.byId(id));
-		}else{
-			var myTextBox = new dijit.form.TextBox({
-		        value: "0",
-		        readOnly: true,
-		        style: { 
-					width: "200px",
-					height: "200px"
+			
+			domConstruct.create("span", {
+				id: id+"_label",
+				innerHTML: label+" ["+unit+"]",
+				style: { 
+					position: "relative",
+					bottom: "50%",
+					color: "white"
 				},
-		        onclick: "customizeDiv("+id+")"
-		    }, dojo.byId(id));
+			}, 
+			id);
+		}else{
+			var newGauge = new ValueWidget({
+				div: dom.byId(id),
+				label: label,
+				unit: unit
+			}, dojo.byId(id));
 		}
-		
+		registry.byId(id).set("dataType", dataType);
+		registry.byId(id).set("gaugeType", gaugeType);
 	};
 	
 	getGaugeSpecs = function(id){
-		var type;
+		var dataType;
 		var max;
 		var tick;
+		var label;
+		var unit;
 		if(id=="gauge_engineRPM"){
-			type = "circular";
+			dataType = "value";
 			max = 7;
 			tick = 1;
+			label = "RPM";
+			unit = "/s";
 		}else if(id=="gauge_speed"){
-			type = "circular";
+			dataType = "value";
 			max = 250;
 			tick = 20;
+			label = "Speed";
+			unit = "km/h";
 		}else if(id=="gauge_runtime"){
-			type = "label";
+			dataType = "string";
 			max = 1000;
 			tick = 100;
+			label = "Runtime";
+			unit = "s";
 		}else if(id=="gauge_oilTemperature"){
-			type = "half_top";
+			dataType = "value";
 			max = 200;
 			tick = 20;
+			label = "Oil Temp";
+			unit = "°C";
 		}else if(id=="gauge_fuelType"){
-			type = "label";
+			dataType = "string";
 			max = 100;
 			tick = 10;
+			label = "Fuel Type";
+			unit = "";
 		}else if(id=="gauge_fuelRate"){
-			type = "half_bottom";
+			dataType = "value";
 			max = 10;
 			tick = 1;
+			label = "Fuel Rate";
+			unit = "l/100km";
 		}else{
 			alert("An Error getting the Gauge Specs occurred.");
 			return;
 		}
-		return [type, max, tick];
+		return [dataType, max, tick, label, unit];
 	}
 	
 	removeGauge = function(){
@@ -253,7 +303,7 @@ require([
 		storageProvider.put("gaugesDiv", dom.byId("gauges").innerHTML);
 		var gauges = new Array();
 		registry.findWidgets(dom.byId("gauges")).forEach(function(gauge){
-			gauges.push({"id":gauge.id});
+			gauges.push({"id":gauge.id, "gaugeType":gaugeType});
 		});
 		storageProvider.put("gauges", gauges);
 	}
@@ -271,9 +321,13 @@ require([
 	setGaugeValues = function(values){
 		values.forEach(function(item) {
 			for (key in item){
-				if(registry.byId("gauge_"+key) != null && parseFloat(item[key]) != -1){
-					//alert(parseFloat(item[key]));
-					registry.byId("gauge_"+key).set("value", parseFloat(item[key]));
+				if(registry.byId("gauge_"+key) != null){
+					if(isNaN(parseFloat(item[key]))){
+						registry.byId("gauge_"+key).set("value", item[key]);
+					}else{
+						registry.byId("gauge_"+key).set("value", parseFloat(item[key]));
+					}
+					
 				}
 			}
 		});
@@ -302,26 +356,46 @@ require([
 	resizeGaugeIncrease=function(){
 		selectedDivs=dojo.query(".selectedDiv");
 		if(selectedDivs.length>0){
-			domStyle.set(selectedDivs[0], "width", domStyle.get(selectedDivs[0], "width")+10+"px");
-			domStyle.set(selectedDivs[0], "height", domStyle.get(selectedDivs[0], "height")+10+"px");
-			rerenderGauge(selectedDivs[0].id);
+			if(displayGaugeAttribute=="Size"){
+				domStyle.set(selectedDivs[0], "width", domStyle.get(selectedDivs[0], "width")+10+"px");
+				domStyle.set(selectedDivs[0], "height", domStyle.get(selectedDivs[0], "height")+10+"px");
+				rerenderGauge(selectedDivs[0].id);
+			}else if(displayGaugeAttribute=="Type"){
+				rerenderGauge(selectedDivs[0].id, 1);
+			}
 		}
 	}
 	
 	resizeGaugeDecrease=function(){
 		selectedDivs=dojo.query(".selectedDiv");
 		if(selectedDivs.length>0){
-			domStyle.set(selectedDivs[0], "width", domStyle.get(selectedDivs[0], "width")-10+"px");
-			domStyle.set(selectedDivs[0], "height", domStyle.get(selectedDivs[0], "height")-10+"px");
-			rerenderGauge(selectedDivs[0].id);
+			if(displayGaugeAttribute=="Size"){
+				domStyle.set(selectedDivs[0], "width", domStyle.get(selectedDivs[0], "width")-10+"px");
+				domStyle.set(selectedDivs[0], "height", domStyle.get(selectedDivs[0], "height")-10+"px");
+				rerenderGauge(selectedDivs[0].id);
+			}else if(displayGaugeAttribute=="Type"){
+				rerenderGauge(selectedDivs[0].id, -1);
+			}
 		}
 	}
 	
-	rerenderGauge = function(id){
+	rerenderGauge = function(id, changeGaugeType=0){
+		//store important data to rerender
 		gaugediv=dom.byId(id);
+		gaugeType=registry.byId(id).get("gaugeType");
+		dataType=registry.byId(id).get("dataType");
+		
+		//destroy old gauge
 		registry.byId(id).destroy();
+		
+		//create new gauge
 		dom.byId("gauges").appendChild(gaugediv);
-		makeGauge(id);
+		if(dataType=="string"){
+			gaugeType=4;
+		}else{
+			gaugeType=(gaugeType+changeGaugeType)%4;
+		}
+		makeGauge(id, gaugeType);
 	}
 	
 	//this function is called when everything else is loaded
@@ -364,7 +438,7 @@ require([
 			//rerender gauges
 			storageProvider.get("gauges").forEach(function(gauge){
 				dom.byId(gauge.id).innerHTML="";
-				makeGauge(gauge.id);
+				makeGauge(gauge.id, gauge.gaugeType);
 				registry.byId(gauge.id+"_add").set("clickable", false);
 				domStyle.set(dom.byId(gauge.id+"_add"), "background", "grey");
 			});
@@ -399,6 +473,9 @@ require([
 	 		  alert("There went something wrong, calling the new state of BluetoothIndicator");
 	 	   }
 		});
+		
+		//Hides loading overlay when dojo is fully initialized
+		domStyle.set(dom.byId("loadingOverlay"),'display','none');
 	});
 	
 	//customize functionality of "Display"
@@ -494,6 +571,8 @@ require([
 		}
 	}
 	
-	//Hides loading overlay when dojo is fully initialized
-	domStyle.set(dom.byId("loadingOverlay"),'display','none');
+	changeAttribute=function(arg){
+		dom.byId("displayGaugeAttribute").innerHTML=arg;
+		displayGaugeAttribute=arg;
+	}
 });

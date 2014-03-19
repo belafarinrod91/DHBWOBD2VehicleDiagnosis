@@ -9,6 +9,9 @@ require([
 		"dojo/dom-construct",
 		"dojox/mobile/ProgressIndicator",
 		"customWidgets/ValueWidget",
+		"customWidgets/CustomCircularGauge",
+		"customWidgets/CustomSemiCircularGauge",
+		"customWidgets/CustomSemiCircularGaugeBottom",
 		"dojox/mobile/parser",
 		"dojox/mobile",
 		"dojox/mobile/compat",
@@ -20,15 +23,12 @@ require([
 		"dojo/domReady!",
 		"dijit/form/Button",
 		"dijit/form/TextBox",
-		"dojox/dgauges/components/black/CircularLinearGauge",
-		"dojox/dgauges/components/black/SemiCircularLinearGauge",
-		"dojox/dgauges/components/grey/SemiCircularLinearGauge",
 		"dojo/window",
 		"dojo/query",
 		"dojox/geo/openlayers/Map",
 		"dojo",
 		"dojox/storage"
-	], function(connect, domClass, ready, registry, Moveable, dom, domStyle, domConstruct, ProgressIndicator, ValueWidget){
+	], function(connect, domClass, ready, registry, Moveable, dom, domStyle, domConstruct, ProgressIndicator, ValueWidget, CustomCircularGauge, CustomSemiCircularGauge, CustomSemiCircularGaugeBottom){
 	
 	//global variables
 	var displayGaugeAttribute="Size";
@@ -142,7 +142,7 @@ require([
 		var unit=specs[4];
 		
 		if(gaugeType==0 && dataType!="string"){
-			var newGauge = new dojox.dgauges.components.black.CircularLinearGauge({
+			var newGauge = new CustomCircularGauge({
 			    minimum: 0,
 			    maximum: max,
 			    majorTickInterval: tick,
@@ -151,20 +151,10 @@ require([
 			    height: domStyle.get(id, "height"),
 			    interactionMode: "none",
 			    animationDuration: 200,
+			    label: label+" ["+unit+"]"
 			}, dojo.byId(id));
-			
-			domConstruct.create("span", {
-				id: id+"_label",
-				innerHTML: label+" ["+unit+"]",
-				style: { 
-					position: "relative",
-					bottom: "25%",
-					color: "white"
-				},
-			}, 
-			id);
 		}else if(gaugeType==1 && dataType!="string"){
-			var newGauge = new dojox.dgauges.components.grey.SemiCircularLinearGauge({
+			var newGauge = new CustomSemiCircularGauge({
 				borderColor: "#000000",
 				fillColor: "#000000",
 			    minimum: 0,
@@ -175,20 +165,10 @@ require([
 			    height: domStyle.get(id, "height"),
 			    interactionMode: "none",
 			    animationDuration: 200,
+			    label: label+" ["+unit+"]"
 			}, dojo.byId(id));
-			
-			domConstruct.create("span", {
-				id: id+"_label",
-				innerHTML: label+" ["+unit+"]",
-				style: { 
-					position: "relative",
-					bottom: "70%",
-					color: "black"
-				},
-			}, 
-			id);
 		}else if(gaugeType==2 && dataType!="string"){
-			var newGauge = new dojox.dgauges.components.black.SemiCircularLinearGauge({
+			var newGauge = new CustomSemiCircularGaugeBottom({
 			    minimum: 0,
 			    maximum: max,
 			    majorTickInterval: tick,
@@ -197,18 +177,8 @@ require([
 			    height: domStyle.get(id, "height"),
 			    interactionMode: "none",
 			    animationDuration: 200,
+			    label: label+" ["+unit+"]"
 			}, dojo.byId(id));
-			
-			domConstruct.create("span", {
-				id: id+"_label",
-				innerHTML: label+" ["+unit+"]",
-				style: { 
-					position: "relative",
-					bottom: "50%",
-					color: "white"
-				},
-			}, 
-			id);
 		}else{
 			var newGauge = new ValueWidget({
 				div: dom.byId(id),
@@ -234,7 +204,7 @@ require([
 			unit = "x1000/s";
 		}else if(id=="gauge_speed"){
 			dataType = "value";
-			max = 250;
+			max = 240;
 			tick = 20;
 			label = "Speed";
 			unit = "km/h";

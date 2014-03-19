@@ -38,7 +38,8 @@ html, body {
 }
 
 .selectedDiv{
-	border:1px solid red;
+	background-color: #FF8000;
+	opacity: 0.75;
 }
 
 .mblDomButtonMyRedButton_0 {

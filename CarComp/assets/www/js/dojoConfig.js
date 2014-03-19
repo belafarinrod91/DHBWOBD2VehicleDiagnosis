@@ -16,7 +16,7 @@ require([
 		"dojox/mobile/TextBox",
 		"dojox/mobile/Button",
 		"dojox/mobile/Slider", 
-		"dojox/mobile/deviceTheme", 
+		"dojox/mobile/deviceTheme",
 		"dojo/domReady!",
 		"dijit/form/Button",
 		"dijit/form/TextBox",
@@ -32,6 +32,7 @@ require([
 	
 	//global variables
 	var displayGaugeAttribute="Size";
+	var gaugeTypesCnt = 4;
 	
 	//displaying a dialog
 	show = function(dlg){
@@ -377,11 +378,12 @@ require([
 				domStyle.set(selectedDivs[0], "height", domStyle.get(selectedDivs[0], "height")-10+"px");
 				rerenderGauge(selectedDivs[0].id);
 			}else if(displayGaugeAttribute=="Type"){
-				rerenderGauge(selectedDivs[0].id, -1);
+				rerenderGauge(selectedDivs[0].id, gaugeTypesCnt-1);
 			}
 		}
 	}
 	
+	//function that rerenders a gauge with a given id
 	rerenderGauge = function(id, changeGaugeType){
 		//set default changeGaugeType to 0
 		changeGaugeType = typeof changeGaugeType !== 'undefined' ? changeGaugeType : 0;
@@ -397,9 +399,9 @@ require([
 		//create new gauge
 		dom.byId("gauges").appendChild(gaugediv);
 		if(dataType=="string"){
-			gaugeType=4;
+			gaugeType=gaugeTypesCnt;
 		}else{
-			gaugeType=(gaugeType+changeGaugeType)%4;
+			gaugeType=(gaugeType+changeGaugeType)%gaugeTypesCnt;
 		}
 		makeGauge(id, gaugeType);
 	}

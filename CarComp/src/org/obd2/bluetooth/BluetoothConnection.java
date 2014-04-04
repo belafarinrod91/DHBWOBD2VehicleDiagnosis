@@ -65,11 +65,11 @@ public class BluetoothConnection extends CordovaPlugin {
 	private JSONArray mJSONDiscoveredDevices;
 
 	private List<String> mResultsOfOBD2Values;
-	private boolean mUseListToSendCodes;
 	private int mMsgCnt;
 	private JSONArray mMsgList;
 	private JSONArray mResultArrayForOBD2Values;
 	
+	String mStringBuffer;
 	//error handling 
 	private List<String> mSentValues; 
 	private List<String> mReceivedValues;
@@ -109,6 +109,7 @@ public class BluetoothConnection extends CordovaPlugin {
 		
 		mSentValues = new ArrayList<String>();
 		mReceivedValues = new ArrayList<String>();
+		mStringBuffer = new String();
 
 		mGps = new GPSTracker(context);
 	}
@@ -431,7 +432,7 @@ public class BluetoothConnection extends CordovaPlugin {
 		PluginResult result = null;
 		try {
 			String msg = args.getString(0);
-			msg = msg + '\r';
+			msg = msg + "1\r";
 			if (mConnectionHandler.getState() != ConnectionHandler.STATE_CONNECTED) {
 				Log.d(TAG, "Can't send, not connected");
 				result = new PluginResult(PluginResult.Status.ERROR);
@@ -478,7 +479,6 @@ public class BluetoothConnection extends CordovaPlugin {
 		mResultsOfOBD2Values = null;
 		
 		PluginResult result = null;
-		mUseListToSendCodes = true;
 		mResultsOfOBD2Values = new ArrayList<String>();		
 		mMsgList = args;
 		mMsgCnt = 0;
@@ -669,6 +669,18 @@ public class BluetoothConnection extends CordovaPlugin {
 				case ConnectionHandler.STATE_CONNECTED:
 					Log.d(TAG, "Handler - BluetoothChatService.STATE_CONNECTED");
 					updateConnectionStatus("Connected.");
+					
+					/*
+					//reset 
+					writeMessage("ATZ");
+					//linefeed off
+					writeMessage("ATL0");
+					//timeout
+					writeMessage("ATST" + Integer.toHexString(0xFF & 62));
+					//setprotocol 
+					writeMessage("ATSP00");
+					*/
+					
 					break;
 				case ConnectionHandler.STATE_CONNECTING:
 					Log.d(TAG,
@@ -689,21 +701,29 @@ public class BluetoothConnection extends CordovaPlugin {
 				byte[] writeBuf = (byte[]) msg.obj;
 				break;
 			case MESSAGE_READ:
+				
+				
 				byte[] readBuf = (byte[]) msg.obj;
 				String readMessage = new String(readBuf, 0, msg.arg1);
 				Log.d(TAG, "MESSAGE READ :"+readMessage);
-				if (mUseListToSendCodes) {
-					if (!readMessage.equals(null) && readMessage.contains("41")) {
-						//Log.d(TAG, "MESSAGE_READ: " + readMessage);
-						mResultsOfOBD2Values.add(readMessage);
-						Log.d(TAG, "WAS ADDED TO LIST "+readMessage);
+				mStringBuffer += readMessage;
+				
+				if (mStringBuffer.contains("41") && mStringBuffer.contains(">")) {
+						Log.e("StringBuffer","Before "+mStringBuffer);
+						String result = mStringBuffer.substring(mStringBuffer.indexOf("41"), mStringBuffer.indexOf(">")-1);
+						mResultsOfOBD2Values.add(result);
+						Log.d(TAG, "WAS ADDED TO LIST "+result);
+						mStringBuffer = mStringBuffer.substring(mStringBuffer.indexOf(">")+1, mStringBuffer.length());
+						Log.e("StringBuffer", "After" +mStringBuffer);
 						try {
 							parseAndWriteMsg();
 						} catch (JSONException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					}
+					
+					
+					
 				} else {
 					//Log.d(TAG, "NOT IN IF :MESSAGE_READ: " + readMessage);
 				}

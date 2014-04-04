@@ -25,7 +25,6 @@ require([
 		"dijit/form/TextBox",
 		"dojo/window",
 		"dojo/query",
-		"dojox/geo/openlayers/Map",
 		"dojo",
 		"dojox/storage"
 	], function(connect, domClass, ready, registry, Moveable, dom, domStyle, domConstruct, ProgressIndicator, ValueWidget, CustomCircularGauge, CustomSemiCircularGauge, CustomSemiCircularGaugeBottom){
@@ -425,7 +424,7 @@ require([
 		connect.subscribe("/dojox/mobile/afterTransitionIn",
 			    function(view, moveTo, dir, transition, context, method){
 				  if(moveTo=="navigation"){
-					  renderMap();
+					  //renderMap();
 				  }
 				  else if(moveTo == 'displayGauges'){
 				  		refreshGauges();

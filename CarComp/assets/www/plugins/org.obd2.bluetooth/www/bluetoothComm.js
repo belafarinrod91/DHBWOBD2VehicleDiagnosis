@@ -24,7 +24,7 @@ cordova.define("org.obd2.bluetooth.BluetoothConnection", function(require, expor
 
 	connect: function(address, success, failure){cordova.exec(success, failure, "BluetoothConnection", "connect", [address]);},
 	
-	writeMessage : function (message, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "writeMessage", [message]);},
+	writeMessage : function (message, success, failure) {cordova.exec(success, failure, "BluetoothConnection", "writeMessage", message);},
 	
 	getOBD2ConnectionStatus : function (success, failure) {
 		return cordova.exec(success, failure, "BluetoothConnection", "getOBD2ConnectionStatus", []);},

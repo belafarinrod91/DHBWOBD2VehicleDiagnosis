@@ -248,23 +248,21 @@ function fetchOBD2Values(obd2Values){
 	setGaugeValues(obd2Values);
 	setDisplayValues(obd2Values);
 	console.log("before refreshing");
-	/* setTimeout(function() {
+	//setTimeout(function() {
 		console.log("refreshing!");
 		refreshValues();
-	}, 500); */
+	//}, 0); 
 }
 
 //just generates random values atm... Here a function should be called receiving the actual values from the bt-adapter.
 function refreshValues(){
-	var request =[{"value":"speed"}, {"value":"engineRPM"}];
-	app.getOBD2Values(request);
+	var request = createGaugesRequest();
+	app.writeMessage(request);
 }
 
 function refreshGauges(){
-	//refreshValues();
-	setInterval(function() {
-		setGaugeValues(dummyJSON());
-	}, 2000);
+	refreshValues();
+	
 }
 
 

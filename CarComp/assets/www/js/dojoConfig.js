@@ -197,10 +197,10 @@ require([
 		var unit;
 		if(id=="gauge_engineRPM"){
 			dataType = "value";
-			max = 7;
-			tick = 1;
+			max = 7000;
+			tick = 1000;
 			label = "RPM";
-			unit = "x1000/s";
+			unit = "/s";
 		}else if(id=="gauge_speed"){
 			dataType = "value";
 			max = 240;
@@ -552,4 +552,25 @@ require([
 		dom.byId("displayGaugeAttribute").innerHTML=arg;
 		displayGaugeAttribute=arg;
 	}
+	
+	//creates a request object for the display view
+    createDisplayRequest = function(){
+   	 var listitems = registry.byId("displayList").getChildren();
+   	 var result = new Array();
+   	 for(var i=0; i<listitems.length; i++){
+   		 var id=listitems[i].id;
+   		 result.push({"value":id.substring(id.indexOf("_")+1)});
+   	 }
+   	 return result;
+    }
+    
+    //creates a request object for the display gauges view
+    createGaugesRequest = function(){
+   	 var result = new Array();
+   	 registry.findWidgets(dom.byId("gauges")).forEach(function(gauge){
+   		 var id=gauge.id;
+   		 result.push({"value":id.substring(id.indexOf("_")+1)});
+   	 });
+   	 return result;
+    }
 });

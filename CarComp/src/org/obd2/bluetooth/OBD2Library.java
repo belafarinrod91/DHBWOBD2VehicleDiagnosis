@@ -16,7 +16,7 @@ public class OBD2Library {
 	
 	
 	public static void initializeLib(){
-		mLib.put("oilTemperature", "5C" );
+		mLib.put("oilTemperature", "05" );
 		mLib.put("engineRPM", "0C");
 		mLib.put("speed", "0D");
 		mLib.put("runtime", "1F");
@@ -151,7 +151,7 @@ public class OBD2Library {
 	
 	private static String engineRPM(String value){
 		String result = null;
-		float iValue = (hexParser(value)/4)/1000;
+		int iValue = (hexParser(value))/4;
 		result = Float.toString(iValue);
 		return result;
 	}

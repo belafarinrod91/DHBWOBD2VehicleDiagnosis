@@ -7,9 +7,8 @@ package org.obd2.bluetooth;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -20,19 +19,23 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 
-public class BluetoothConnection extends CordovaPlugin {
+
+
+public class BluetoothConnection extends CordovaPlugin  {
 
 	// Debug messages
 	private static final String TAG = "BluetoothPlugin";
@@ -60,21 +63,10 @@ public class BluetoothConnection extends CordovaPlugin {
 	private static BluetoothAdapter mBtAdapter;
 	private boolean mIsDiscovering = false;
 	private Context context;
-	private ConnectionHandler mConnectionHandler = null;
+	ConnectionHandler mConnectionHandler;
 	private ArrayList<BluetoothDevice> mDiscoveredDevices;
 	private JSONArray mJSONDiscoveredDevices;
-
-	private List<String> mResultsOfOBD2Values;
-	private int mMsgCnt;
-	private JSONArray mMsgList;
-	private JSONArray mResultArrayForOBD2Values;
 	
-	String mStringBuffer;
-	//error handling 
-	private List<String> mSentValues; 
-	private List<String> mReceivedValues;
-
-	private GPSTracker mGps;
 	private CallbackContext mCallbackContext;
 
 	// Messages
@@ -83,6 +75,11 @@ public class BluetoothConnection extends CordovaPlugin {
 	public static final int MESSAGE_WRITE = 3;
 	public static final int MESSAGE_DEVICE_NAME = 4;
 	public static final int MESSAGE_TOAST = 5;
+
+	// Service Connection
+	private boolean isServiceBound;
+	private ExecutorService mThreadPool;
+	
 
 	public void initialize(CordovaInterface cordova, CordovaWebView webView) {
 		super.initialize(cordova, webView);
@@ -103,19 +100,20 @@ public class BluetoothConnection extends CordovaPlugin {
 		// Register for broadcasts when connectivity state changes
 		filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 		context.registerReceiver(mReceiver, filter);
-
-		mConnectionHandler = new ConnectionHandler(context, mHandler);
-		OBD2Library.initializeLib();
+		mThreadPool = this.cordova.getThreadPool();
 		
-		mSentValues = new ArrayList<String>();
-		mReceivedValues = new ArrayList<String>();
-		mStringBuffer = new String();
+		doBindService();
+		//mConnectionHandler.setMemberVariables(context, mHandler);
+		
+		
+		
+		OBD2Library.initializeLib();
 
-		mGps = new GPSTracker(context);
 	}
 
 	@Override
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
+	public boolean execute(String action, JSONArray args,
+			CallbackContext callbackContext) {
 
 		Log.d(TAG, "Plugin Called");
 		this.mCallbackContext = callbackContext;
@@ -156,29 +154,17 @@ public class BluetoothConnection extends CordovaPlugin {
 
 		} else if (ACTION_CONNECT.equals(action)) {
 			result = connect(args);
-			
-		} else if (ACTION_GET_OBD2_VALUES.equals(action)) {
-		    result = getOBD2Values(args);
-		    
+
 		} else if (ACTION_OBD2_CONNECTION_STATUS.equals(action)) {
 			result = getOBD2ConnectionStatus(callbackContext);
-		
-			
-		} else if (action.equals(ACTION_GET_LOCATION)) {
-			result = getLocation(callbackContext);
-		}
-
-		else if (action.equals(Action_GET_LOCATION_STATUS)) {
-			result = getLocationStatus(callbackContext);
-		}
-		else {
+		} else {
 			result = new PluginResult(PluginResult.Status.INVALID_ACTION);
 			Log.d(TAG, "Invalid action : " + action + " passed");
 		}
-			
+
 		this.mCallbackContext.sendPluginResult(result);
 		return true;
-		
+
 	}
 
 	public PluginResult enableBluetooth() {
@@ -353,14 +339,15 @@ public class BluetoothConnection extends CordovaPlugin {
 
 	public PluginResult listBoundDevices(CallbackContext callbackContext) {
 		PluginResult result = null;
-		
+
 		JSONArray resultArray = new JSONArray();
 		Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
 		if (pairedDevices.size() > 0) {
 			for (BluetoothDevice device : pairedDevices) {
-				Log.i(TAG, device.getName() + " " + device.getAddress()+ " " + device.getBondState());
+				Log.i(TAG, device.getName() + " " + device.getAddress() + " "
+						+ device.getBondState());
 				JSONObject jDevice = new JSONObject();
-				
+
 				try {
 					jDevice.put("name", device.getName());
 					jDevice.put("address", device.getAddress());
@@ -417,7 +404,7 @@ public class BluetoothConnection extends CordovaPlugin {
 			macAddress = args.getString(0);
 			Log.i(TAG, "connect to ..." + macAddress);
 			BluetoothDevice device = mBtAdapter.getRemoteDevice(macAddress);
-			mConnectionHandler.connect(device, false);
+			mConnectionHandler.connect(device);
 
 			result = new PluginResult(PluginResult.Status.OK, true);
 		} catch (JSONException e) {
@@ -429,109 +416,47 @@ public class BluetoothConnection extends CordovaPlugin {
 	}
 
 	public PluginResult writeMessage(JSONArray args) {
-		PluginResult result = null;
-		try {
-			String msg = args.getString(0);
-			msg = msg + "1\r";
-			if (mConnectionHandler.getState() != ConnectionHandler.STATE_CONNECTED) {
-				Log.d(TAG, "Can't send, not connected");
-				result = new PluginResult(PluginResult.Status.ERROR);
-			}
-
-			if (msg.length() > 0) {
-				byte[] send = msg.getBytes();
-				mConnectionHandler.write(send);
-				//Log.d("BluetoothPlugin - " + ACTION_WRITE_MESSAGE, "Returning "+ "Result: " + send);
-				result = new PluginResult(PluginResult.Status.OK, send);
-			} else {
-				Log.d(TAG, "Nothing to send here.");
-				result = new PluginResult(PluginResult.Status.ERROR);
-			}
-		} catch (Exception Ex) {
-			Log.d("BluetoothPlugin - " + ACTION_WRITE_MESSAGE, "Got Exception "
-					+ Ex.getMessage());
-			result = new PluginResult(PluginResult.Status.ERROR);
-		}
-		return result;
-	}
-
-	private void writeMessage(String msg) {
-		msg = msg + '\r';
-
-		if (mConnectionHandler.getState() != ConnectionHandler.STATE_CONNECTED) {
-			Log.d(TAG, "Can't send, not connected");
-		}
-
-		if (msg.length() > 0) {
-			byte[] send = msg.getBytes();
-			mConnectionHandler.write(send);
-			Log.d(TAG, "Returning " + "Result: " + send);
-		} else {
-			Log.d(TAG, "Nothind to send here.");
-		}
-
-	}
-
-	public PluginResult getOBD2Values(JSONArray args) {
-		mReceivedValues.clear();
-		mSentValues.clear();	
-		mResultArrayForOBD2Values = null;
-		mResultsOfOBD2Values = null;
+		PluginResult result = null;		
+		final ArrayList<OBDCommand> commands = new ArrayList<OBDCommand>();
 		
-		PluginResult result = null;
-		mResultsOfOBD2Values = new ArrayList<String>();		
-		mMsgList = args;
-		mMsgCnt = 0;
+		Log.e("ARGS", args.toString());
+		
+		for(int i = 0; i < args.length(); i++){
+			JSONObject item;
+			try {
+				item = args.getJSONObject(i);
+				String tmpVal = item.getString("value");
+				String val = OBD2Library.getCodeForName(tmpVal);
+				OBDCommand cmd = new OBDCommand("01"+val);
+				commands.add(cmd);
 
-		try {
-			parseAndWriteMsg();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		
+		mThreadPool.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				mConnectionHandler.writeMessage(commands);
+				
+				JSONArray resultArray = new JSONArray();
+				
+				for (OBDCommand command : commands) {
+					String result = command.getResult().substring(4);
+					resultArray.put(OBD2Library.returnResultObject(result));
+				}
+				Log.e("TAG", "Result "+resultArray.toString());
+				callJavaScriptfunction("fetchOBD2Values", resultArray);				
+			}
+		});
 		
 		result = new PluginResult(PluginResult.Status.OK);
 		return result;
 	}
 
-	public void parseAndWriteMsg() throws JSONException {
-		if (mMsgList.length() > mMsgCnt) {
-			JSONObject item = mMsgList.getJSONObject(mMsgCnt);
-			String tmpVal = item.getString("value");
-			String val = OBD2Library.getCodeForName(tmpVal);
-			mSentValues.add(val);
-			
-			Log.d(TAG, "WRITE "+val);
-			writeMessage("01" + val);
-			mMsgCnt++;
-		}	
-		else {
-			processMessage();
-		}
-	}
-	
-	public void processMessage(){
-		mResultArrayForOBD2Values = new JSONArray();
-		for(String s :mResultsOfOBD2Values){ 
-			if(s.length() > 6 && !s.equals("")){
-				s = s.replaceAll("[^0-9a-fA-F]", "");
-				//Log.d(TAG, "Processed Message "+s);
-				JSONObject obj = OBD2Library.returnResultObject(s); 
-				mReceivedValues.add("");//OBD2Library.getLabelForAnswer(s));
-				mResultArrayForOBD2Values.put(obj); 
-			}
-		} 
-		
-		
-		
-		/*if(!mSentValues.equals(mReceivedValues)){
-			this.webView.sendJavascript("alert('Some values are missing.');");	
-		} */
-		
-		this.webView.sendJavascript("fetchOBD2Values("+ mResultArrayForOBD2Values+");");
-	}
-	
-	
 	public PluginResult getOBD2ConnectionStatus(CallbackContext callbackContext) {
 		PluginResult result = null;
 		boolean obd2connected = false;
@@ -547,48 +472,12 @@ public class BluetoothConnection extends CordovaPlugin {
 		callbackContext.sendPluginResult(result);
 		return result;
 	}
-	
 
 
-	public PluginResult getLocation(CallbackContext callbackContext) {
+
+	public PluginResult getInternetStatus(CallbackContext callbackContext) {
 		PluginResult result = null;
-		Location loc = mGps.getLocation();
-		double lat = loc.getLatitude();
-		double lon = loc.getLongitude();
 
-		JSONObject obj = new JSONObject();
-		try {
-			obj.put("lat", lat);
-			obj.put("lon", lon);
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		result = new PluginResult(PluginResult.Status.OK, obj);
-		result.setKeepCallback(true);
-		callbackContext.sendPluginResult(result);
-		return result;
-	}
-
-	public PluginResult getLocationStatus(CallbackContext callbackContext) {
-		PluginResult result = null;
-		boolean res = false;
-
-		if (mGps.canGetLocation()) {
-			res = true;
-		}
-		result = new PluginResult(PluginResult.Status.OK, res);
-		result.setKeepCallback(true);
-		callbackContext.sendPluginResult(result);
-		return result;
-	}
-	
-	
-	public PluginResult getInternetStatus(CallbackContext callbackContext){
-		PluginResult result = null;
-		
-		
 		return result;
 	}
 
@@ -654,89 +543,60 @@ public class BluetoothConnection extends CordovaPlugin {
 		}
 	};
 
+	public void callJavaScriptfunction(String functionName, Object object){
+		
+		this.webView.sendJavascript(functionName+"("+ object+");");
+	}
+	
 	public void updateConnectionStatus(String statement) {
 		this.webView
 				.sendJavascript("document.getElementById('btConnectionStatus').innerHTML='"
 						+ statement + "';");
 	}
 
+	public void doBindService() {
+		Intent serviceIntent = new Intent(context, ConnectionHandler.class);
+		context.bindService(serviceIntent, serviceConn,
+				Context.BIND_AUTO_CREATE);
+	}
+
+	public void doUnbindService() {
+		if (isServiceBound) {
+			if (mConnectionHandler.getState() == ConnectionHandler.STATE_CONNECTED)
+				mConnectionHandler.stopService();
+			Log.d(TAG, "Unbinding OBD service..");
+			context.unbindService(serviceConn);
+		}
+	}
+
+
+	
+	
+	private ServiceConnection serviceConn = new ServiceConnection() {
+		
+		
+        public void onServiceConnected(ComponentName className,  IBinder service) {
+        	ConnectionHandler.ConnectionHandlerBinder binder = (ConnectionHandler.ConnectionHandlerBinder) service;
+            mConnectionHandler = binder.getService();
+            isServiceBound = true;
+            mConnectionHandler.setMemberVariables(context, mHandler, mThreadPool);
+        }
+
+		public void onServiceDisconnected(ComponentName className) {
+			Log.d(TAG, "Test service is unbound");
+			isServiceBound = false;
+		}
+	};
+	
+	
 	private final Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case MESSAGE_STATE_CHANGE:
-				switch (msg.arg1) {
-				case ConnectionHandler.STATE_CONNECTED:
-					Log.d(TAG, "Handler - BluetoothChatService.STATE_CONNECTED");
-					updateConnectionStatus("Connected.");
-					
-					/*
-					//reset 
-					writeMessage("ATZ");
-					//linefeed off
-					writeMessage("ATL0");
-					//timeout
-					writeMessage("ATST" + Integer.toHexString(0xFF & 62));
-					//setprotocol 
-					writeMessage("ATSP00");
-					*/
-					
-					break;
-				case ConnectionHandler.STATE_CONNECTING:
-					Log.d(TAG,
-							"Handler - BluetoothChatService.STATE_CONNECTING");
-					updateConnectionStatus("Connecting ... ");
-					break;
-				case ConnectionHandler.STATE_LISTEN:
-					Log.d(TAG, "Handler - BluetoothChatService.STATE_LISTEN");
-					updateConnectionStatus("Listen ... ");
-					break;
-				case ConnectionHandler.STATE_NONE:
-					Log.d(TAG, "Handler - BluetoothChatService.STATE_NONE");
-					updateConnectionStatus("Nothing to do / Connection Error");
-					break;
-				}
-				break;
-			case MESSAGE_WRITE:
-				byte[] writeBuf = (byte[]) msg.obj;
-				break;
-			case MESSAGE_READ:
-				
-				
-				byte[] readBuf = (byte[]) msg.obj;
-				String readMessage = new String(readBuf, 0, msg.arg1);
-				Log.d(TAG, "MESSAGE READ :"+readMessage);
-				mStringBuffer += readMessage;
-				
-				if (mStringBuffer.contains("41") && mStringBuffer.contains(">")) {
-						Log.e("StringBuffer","Before "+mStringBuffer);
-						String result = mStringBuffer.substring(mStringBuffer.indexOf("41"), mStringBuffer.indexOf(">")-1);
-						mResultsOfOBD2Values.add(result);
-						Log.d(TAG, "WAS ADDED TO LIST "+result);
-						mStringBuffer = mStringBuffer.substring(mStringBuffer.indexOf(">")+1, mStringBuffer.length());
-						Log.e("StringBuffer", "After" +mStringBuffer);
-						try {
-							parseAndWriteMsg();
-						} catch (JSONException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					
-					
-					
-				} else {
-					//Log.d(TAG, "NOT IN IF :MESSAGE_READ: " + readMessage);
-				}
-
-				break;
-			case MESSAGE_DEVICE_NAME:
-				Log.d(TAG, "MESSAGE_DEVICE_NAME");
-				break;
-			case MESSAGE_TOAST:
-				Log.d(TAG, "MESSAGE_TOAST");
-				break;
-
-			}
+			Log.e("TAG", "MESSAGE "+msg);
 		}
 	};
+	
+	
+	
+	
 }

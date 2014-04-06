@@ -1,8 +1,9 @@
-/* Copyright (c) 2013
- *
- * author: Daniel Furini - dna.furini[at].gmail.com
- *
- */
+//TODO : ExceptionHandling
+//TODO : Comments 
+//TODO : only send when connection is available, .... 
+//TODO : plugin.xml (Permissions, classes, ...) 
+
+
 package org.obd2.bluetooth;
 
 import java.lang.reflect.Method;
@@ -20,6 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo.State;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -38,10 +40,9 @@ import android.content.ServiceConnection;
 public class BluetoothConnection extends CordovaPlugin  {
 
 	// Debug messages
-	private static final String TAG = "BluetoothPlugin";
+	public static final String TAG = "BluetoothPlugin";
 	public static final String DEVICE_NAME = "device_name";
-	public static final String TOAST = "toast";
-
+	
 	// Actions called from the UI
 	public static final String ACTION_ENABLE_BT = "enableBT";
 	public static final String ACTION_DISABLE_BT = "disableBT";
@@ -54,37 +55,30 @@ public class BluetoothConnection extends CordovaPlugin  {
 	public static final String ACTION_LIST_BOUND_DEVICES = "listBoundDevices";
 	public static final String ACTION_IS_BOUND_BT = "isBound";
 	public static final String ACTION_WRITE_MESSAGE = "writeMessage";
-	public static final String ACTION_GET_OBD2_VALUES = "getOBD2Values";
 	public static final String ACTION_OBD2_CONNECTION_STATUS = "getOBD2ConnectionStatus";
-	public static final String ACTION_GET_LOCATION = "getLocation";
-	public static final String Action_GET_LOCATION_STATUS = "getLocationStatus";
+	public static final String ACTION_DISCONNECT = "disconnect";
 
 	// MemberVariables
 	private static BluetoothAdapter mBtAdapter;
 	private boolean mIsDiscovering = false;
 	private Context context;
-	ConnectionHandler mConnectionHandler;
 	private ArrayList<BluetoothDevice> mDiscoveredDevices;
 	private JSONArray mJSONDiscoveredDevices;
-	
-	private CallbackContext mCallbackContext;
-
-	// Messages
-	public static final int MESSAGE_STATE_CHANGE = 1;
-	public static final int MESSAGE_READ = 2;
-	public static final int MESSAGE_WRITE = 3;
-	public static final int MESSAGE_DEVICE_NAME = 4;
-	public static final int MESSAGE_TOAST = 5;
-
-	// Service Connection
-	private boolean isServiceBound;
 	private ExecutorService mThreadPool;
+	
+	
+	// -> Service Connections
+	private ConnectionHandler mConnectionHandler;
+	private boolean isServiceBound;
+	private boolean isServiceRunning;
+	
 	
 
 	public void initialize(CordovaInterface cordova, CordovaWebView webView) {
 		super.initialize(cordova, webView);
+		
 		context = this.cordova.getActivity().getBaseContext();
-
+		
 		// Register for broadcasts when a device is discovered
 		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
 		context.registerReceiver(mReceiver, filter);
@@ -100,13 +94,19 @@ public class BluetoothConnection extends CordovaPlugin  {
 		// Register for broadcasts when connectivity state changes
 		filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 		context.registerReceiver(mReceiver, filter);
+		
+		// Register for broadcasts when disconnecting ...
+		filter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+		context.registerReceiver(mReceiver, filter);
+		
+		//Register for broadcasts when disconnected
+		filter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+		context.registerReceiver(mReceiver, filter);
+		
+		
 		mThreadPool = this.cordova.getThreadPool();
 		
 		doBindService();
-		//mConnectionHandler.setMemberVariables(context, mHandler);
-		
-		
-		
 		OBD2Library.initializeLib();
 
 	}
@@ -116,14 +116,13 @@ public class BluetoothConnection extends CordovaPlugin  {
 			CallbackContext callbackContext) {
 
 		Log.d(TAG, "Plugin Called");
-		this.mCallbackContext = callbackContext;
 		PluginResult result = null;
 
 		mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 		mDiscoveredDevices = new ArrayList<BluetoothDevice>();
 
 		if (ACTION_DISCOVER_DEVICES.equals(action)) {
-			discoverDevices(callbackContext);
+			result = discoverDevices();
 
 		} else if (ACTION_IS_BT_ENABLED.equals(action)) {
 			result = isEnabled();
@@ -156,13 +155,17 @@ public class BluetoothConnection extends CordovaPlugin  {
 			result = connect(args);
 
 		} else if (ACTION_OBD2_CONNECTION_STATUS.equals(action)) {
-			result = getOBD2ConnectionStatus(callbackContext);
+			result = getOBD2ConnectionStatus();
+			
+		} else if (ACTION_DISCONNECT.equals(action)) {
+			result = disconnect();
+			
 		} else {
 			result = new PluginResult(PluginResult.Status.INVALID_ACTION);
 			Log.d(TAG, "Invalid action : " + action + " passed");
 		}
 
-		this.mCallbackContext.sendPluginResult(result);
+		callbackContext.sendPluginResult(result);
 		return true;
 
 	}
@@ -215,61 +218,52 @@ public class BluetoothConnection extends CordovaPlugin  {
 		return result;
 	}
 
-	public void discoverDevices(final CallbackContext callbackContext) {
-
+	public PluginResult discoverDevices() {
+		PluginResult result = null;
 		this.cordova.getThreadPool().execute(new Runnable() {
 
-			@Override
-			public void run() {
-				PluginResult result = null;
-				try {
-					mDiscoveredDevices.clear();
-					setDiscovering(true);
+		@Override
+		public void run() {
+			PluginResult result = null;
+			try {
+				mDiscoveredDevices.clear();
+				setDiscovering(true);
+				if (mBtAdapter.isDiscovering()) {
+					mBtAdapter.cancelDiscovery();
+				}
+				mBtAdapter.startDiscovery();
 
-					if (mBtAdapter.isDiscovering()) {
-						mBtAdapter.cancelDiscovery();
-					}
-					mBtAdapter.startDiscovery();
-
-					while (mIsDiscovering) {
-					}
-
-					mJSONDiscoveredDevices = createJSONArrayOfDiscoveredDevices();
-
-					result = new PluginResult(PluginResult.Status.OK,
-							mJSONDiscoveredDevices);
-					result.setKeepCallback(true);
-					callbackContext.sendPluginResult(result);
+				while (mIsDiscovering) {
+				
 				}
 
-				catch (Exception Ex) {
-					Log.d("BluetoothPlugin - " + ACTION_DISCOVER_DEVICES,
-							"Got Exception " + Ex.getMessage());
-					result = new PluginResult(PluginResult.Status.ERROR);
+				mJSONDiscoveredDevices = createJSONArrayOfDiscoveredDevices();
+				result = new PluginResult(PluginResult.Status.OK,mJSONDiscoveredDevices);
+				result.setKeepCallback(true);
+				}
+
+			catch (Exception Ex) {
+				Log.d("BluetoothPlugin - " + ACTION_DISCOVER_DEVICES,"Got Exception " + Ex.getMessage());
+				result = new PluginResult(PluginResult.Status.ERROR);
 				}
 
 			}
 		});
-
+		return result;
 	}
 
 	public PluginResult stopDiscover() {
 		PluginResult result = null;
-
 		try {
-
 			setDiscovering(true);
-
 			Log.i(TAG, "BluetoothPlugin - " + ACTION_STOP_DISCOVER);
 			result = new PluginResult(PluginResult.Status.OK);
 
 		} catch (Exception Ex) {
-			Log.d("BluetoothPlugin - " + ACTION_STOP_DISCOVER, "Got Exception "
-					+ Ex.getMessage());
+			Log.d("BluetoothPlugin - " + ACTION_STOP_DISCOVER, "Got Exception "+ Ex.getMessage());
 			result = new PluginResult(PluginResult.Status.ERROR);
 		}
 		return result;
-
 	}
 
 	public PluginResult pair(JSONArray args) {
@@ -361,7 +355,6 @@ public class BluetoothConnection extends CordovaPlugin  {
 		}
 		result = new PluginResult(PluginResult.Status.OK, resultArray);
 		result.setKeepCallback(true);
-		callbackContext.sendPluginResult(result);
 		return result;
 	}
 
@@ -380,15 +373,12 @@ public class BluetoothConnection extends CordovaPlugin  {
 			else
 				state = false;
 
-			Log.d(TAG, "Is Bound with " + device.getName() + " - address "
-					+ device.getAddress());
-			Log.d("BluetoothPlugin - " + ACTION_IS_BOUND_BT, "Returning "
-					+ "Result: " + state);
+			Log.d(TAG, "Is Bound with " + device.getName() + " - address "+ device.getAddress());
+			Log.d("BluetoothPlugin - " + ACTION_IS_BOUND_BT, "Returning "+ "Result: " + state);
 			result = new PluginResult(PluginResult.Status.OK, state);
 
 		} catch (Exception Ex) {
-			Log.d("BluetoothPlugin - " + ACTION_IS_BOUND_BT, "Got Exception "
-					+ Ex.getMessage());
+			Log.d("BluetoothPlugin - " + ACTION_IS_BOUND_BT, "Got Exception "+ Ex.getMessage());
 			result = new PluginResult(PluginResult.Status.ERROR);
 		}
 		return result;
@@ -457,7 +447,7 @@ public class BluetoothConnection extends CordovaPlugin  {
 		return result;
 	}
 
-	public PluginResult getOBD2ConnectionStatus(CallbackContext callbackContext) {
+	public PluginResult getOBD2ConnectionStatus() {
 		PluginResult result = null;
 		boolean obd2connected = false;
 
@@ -469,17 +459,16 @@ public class BluetoothConnection extends CordovaPlugin  {
 
 		result = new PluginResult(PluginResult.Status.OK, obd2connected);
 		result.setKeepCallback(true);
-		callbackContext.sendPluginResult(result);
 		return result;
 	}
-
-
-
-	public PluginResult getInternetStatus(CallbackContext callbackContext) {
+	
+	public PluginResult disconnect(){
 		PluginResult result = null;
-
+		mConnectionHandler.disconnect();
+		result = new PluginResult(PluginResult.Status.OK);
 		return result;
 	}
+	
 
 	public void setDiscovering(boolean state) {
 		mIsDiscovering = state;
@@ -511,48 +500,30 @@ public class BluetoothConnection extends CordovaPlugin  {
 		return result;
 	}
 
-	@Override
-	public void onDestroy() {
-		context.unregisterReceiver(mReceiver);
-		super.onDestroy();
-	}
 
 	private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
-
 			String action = intent.getAction();
-
 			if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-
-				BluetoothDevice device = intent
-						.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-				Log.i(TAG,
-						"Device found " + device.getName() + " "
-								+ device.getBondState() + " "
-								+ device.getAddress());
+				BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+				Log.i(TAG,"Device found " + device.getName() + " "+ device.getBondState() + " "+ device.getAddress());
 				addDevice(device);
-
 			} else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
 				Log.i(TAG, "Discovery started");
 				setDiscovering(true);
-			} else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED
-					.equals(action)) {
+			} else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
 				Log.i(TAG, "Discovery was finished");
 				setDiscovering(false);
+			} else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)){
+				Log.d("Receiver", "Disconnecting ...");
+				mConnectionHandler.setState(ConnectionHandler.STATE_DISCONNECTING);
+					
+			} else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)){
+				Log.d("Receiver", "Disconnected");
+				mConnectionHandler.setState(ConnectionHandler.STATE_DISCONNECTED);
 			}
 		}
 	};
-
-	public void callJavaScriptfunction(String functionName, Object object){
-		
-		this.webView.sendJavascript(functionName+"("+ object+");");
-	}
-	
-	public void updateConnectionStatus(String statement) {
-		this.webView
-				.sendJavascript("document.getElementById('btConnectionStatus').innerHTML='"
-						+ statement + "';");
-	}
 
 	public void doBindService() {
 		Intent serviceIntent = new Intent(context, ConnectionHandler.class);
@@ -569,9 +540,6 @@ public class BluetoothConnection extends CordovaPlugin  {
 		}
 	}
 
-
-	
-	
 	private ServiceConnection serviceConn = new ServiceConnection() {
 		
 		
@@ -579,7 +547,7 @@ public class BluetoothConnection extends CordovaPlugin  {
         	ConnectionHandler.ConnectionHandlerBinder binder = (ConnectionHandler.ConnectionHandlerBinder) service;
             mConnectionHandler = binder.getService();
             isServiceBound = true;
-            mConnectionHandler.setMemberVariables(context, mHandler, mThreadPool);
+            mConnectionHandler.startService(context, mHandler, mThreadPool);
         }
 
 		public void onServiceDisconnected(ComponentName className) {
@@ -590,13 +558,54 @@ public class BluetoothConnection extends CordovaPlugin  {
 	
 	
 	private final Handler mHandler = new Handler() {
+		String information;
 		@Override
-		public void handleMessage(Message msg) {
-			Log.e("TAG", "MESSAGE "+msg);
+		public void handleMessage(Message message) {
+			switch(message.what){
+				case ConnectionHandler.STATE_NONE : 
+					updateUIField("btConnectionStatus", "Nothing to do.");
+					break;
+				case ConnectionHandler.STATE_CONNECTING_ERROR :
+					updateUIField("btConnectionStatus", "Connecting Error.");
+					break;
+				case ConnectionHandler.STATE_CONNECTING : 
+					information = message.getData().getString(DEVICE_NAME);
+					updateUIField("btConnectionStatus", "Connecting to "+information+" ...");
+					break;
+				case ConnectionHandler.STATE_CONNECTED :
+					information = message.getData().getString(DEVICE_NAME);
+					updateUIField("btConnectionStatus", "Connected to " + information);
+					//TODO : configure Connection
+					break;
+				case ConnectionHandler.STATE_DISCONNECTING : 
+					updateUIField("btConnectionStatus", "Disconnection ... Lost RemoteDevice ?");
+					break;
+				case ConnectionHandler.STATE_DISCONNECTED : 
+					updateUIField("btConnectionStatus", "Disconnected");
+					break;
+			}
 		}
 	};
 	
+	public void callJavaScriptfunction(String functionName, Object object){
+		
+		this.webView.sendJavascript(functionName+"("+ object+");");
+	}
+	
+	public void updateUIField(String nameField, String message){
+		String command = "document.getElementById('"+nameField+"').innerHTML='"+message+"'";
+		this.webView.sendJavascript(command);
+	}
 	
 	
-	
+	@Override
+	public void onDestroy(){
+		Log.e("Lifecycle", "onDestroy()");
+		super.onDestroy();
+		context.unregisterReceiver(mReceiver);
+		mConnectionHandler.stopService();
+		doUnbindService();		
+	}
+
+
 }

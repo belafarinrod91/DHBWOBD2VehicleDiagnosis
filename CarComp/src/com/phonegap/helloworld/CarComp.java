@@ -39,5 +39,7 @@ public class CarComp extends CordovaActivity
         super.loadUrl(Config.getStartUrl());
         //super.loadUrl("file:///android_asset/www/index.html")
     }
+    
+
 }
 

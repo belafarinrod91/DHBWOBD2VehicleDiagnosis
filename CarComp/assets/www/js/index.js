@@ -110,7 +110,6 @@ var app = {
     	var connectionStatus = app.getOBD2ConnectionStatus();  	
     	if(!connectionStatus){
     		bConnection.connect(address);  
-    		dom.byId("btConnectionStatus").innerHTML="connecting to : "+name+" ...";
     	}
     	else {
     		alert("There is already a connection!");
@@ -182,49 +181,13 @@ var app = {
         return enabled;
     },
     
-    getOBD2Values : function(values){
-    	bConnection.getOBD2Values(values,
-    		function(r){
-        		return r;
-
-    	},
-    		function(e){
-        		console.log("error during calling 'getOBD2Values'");
-
-    	});
+    disconnect : function(){
+    	bConnection.disconnect();
     },
     
-    fetchOBD2Values : function(){
-    	bConnection.fetchOBD2Values(
-    		function(r){
-    			return r;
-    		},
-    		function(e){
-    			console.log("error during calling 'fetchOBD2Values'");
-    		});
-    },
-    
-    getLocationStatus : function() {
-            bConnection.getLocationStatus(
-            	function(r){
-					return r;
-            },
-              function(e){
-            	  console.log("Failure during calling 'getLocationStatus'");
-            });
-        },
-	
-	getLocation : function(){
-    	var location; 
-    	bConnection.getLocation(
-    		function(r){
-    			location = r;
-    			},
-    		function(e){
-    			console.log("error during calling 'getLocation'");
-    		});
-    	return location;
-	}
+    exit : function(){
+    	bConnection.exitApp();
+    }
 };
 
 //customized android backbutton
@@ -243,6 +206,7 @@ function dummyJSON(){
 	return result;
 }
 
+//get called from native plugin, in BluetoothConnection.java with "callJSFunction ..."
 function fetchOBD2Values(obd2Values){
 	console.log(JSON.stringify(obd2Values));
 	setGaugeValues(obd2Values);

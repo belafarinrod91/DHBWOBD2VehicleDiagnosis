@@ -174,13 +174,10 @@ public class BluetoothConnection extends CordovaPlugin  {
 		PluginResult result = null;
 		try {
 			mBtAdapter.enable();
-			Log.d("BluetoothPlugin - " + ACTION_ENABLE_BT, "Returning "
-					+ "Result: " + mBtAdapter.isEnabled());
-			result = new PluginResult(PluginResult.Status.OK,
-					mBtAdapter.isEnabled());
+			Log.d("BluetoothPlugin - " + ACTION_ENABLE_BT, "Returning " + "Result: " + mBtAdapter.isEnabled());
+			result = new PluginResult(PluginResult.Status.OK, mBtAdapter.isEnabled());
 		} catch (Exception Ex) {
-			Log.d("BluetoothPlugin - " + ACTION_ENABLE_BT, "Got Exception "
-					+ Ex.getMessage());
+			Log.d("BluetoothPlugin - " + ACTION_ENABLE_BT, "Got Exception " + Ex.getMessage());
 			result = new PluginResult(PluginResult.Status.ERROR);
 		}
 		return result;
@@ -435,7 +432,9 @@ public class BluetoothConnection extends CordovaPlugin  {
 				JSONArray resultArray = new JSONArray();
 				
 				for (OBDCommand command : commands) {
-					String result = command.getResult().substring(4);
+					//cut string, to get only the answer
+					int index = command.getResult().indexOf("41");
+					String result = command.getResult().substring(index);
 					resultArray.put(OBD2Library.returnResultObject(result));
 				}
 				Log.e("TAG", "Result "+resultArray.toString());
@@ -574,8 +573,10 @@ public class BluetoothConnection extends CordovaPlugin  {
 					break;
 				case ConnectionHandler.STATE_CONNECTED :
 					information = message.getData().getString(DEVICE_NAME);
+					updateUIField("btConnectionStatus", "Configuring connection ...");
+					//Configure Connection with OBD
+					configureConnection();
 					updateUIField("btConnectionStatus", "Connected to " + information);
-					//TODO : configure Connection
 					break;
 				case ConnectionHandler.STATE_DISCONNECTING : 
 					updateUIField("btConnectionStatus", "Disconnection ... Lost RemoteDevice ?");
@@ -605,6 +606,19 @@ public class BluetoothConnection extends CordovaPlugin  {
 		context.unregisterReceiver(mReceiver);
 		mConnectionHandler.stopService();
 		doUnbindService();		
+	}
+	
+	public void configureConnection(){
+		Log.d(TAG, "configure connection");
+		
+		ArrayList<OBDCommand> configureCommands = new ArrayList<OBDCommand>();
+		configureCommands.add(new OBDCommand("ATZ"));
+		configureCommands.add(new OBDCommand("ATL0"));
+		configureCommands.add(new OBDCommand("ATE0"));
+		configureCommands.add(new OBDCommand("ATSP00"));
+		mConnectionHandler.writeMessage(configureCommands);
+		
+		Log.d(TAG, "connection configured");
 	}
 
 

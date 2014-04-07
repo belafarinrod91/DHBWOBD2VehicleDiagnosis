@@ -85,7 +85,6 @@ public class ConnectionHandler extends Service {
 	}
 	
 	public void connect(final BluetoothDevice remoteDevice){
-		mSocket = null;
 		
 		mThreadPool.execute(new Runnable() {
 
@@ -187,6 +186,7 @@ public class ConnectionHandler extends Service {
 	}
 	
 	public void setState(int state){
+		Log.e("STATE ", "CHANGED STATE "+state);
 		mState = state;
 		mHandler.obtainMessage(mState);
 	}
